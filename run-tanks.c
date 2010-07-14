@@ -381,6 +381,59 @@ print_footer(FILE *f)
   fprintf(f, "]]\n");
 }
 
+void
+print_rounds(FILE *f,
+             struct tanks_game *game,
+             struct forftank   *forftanks,
+             struct tank       *tanks,
+             int                ntanks)
+{
+  int i;
+  int alive;
+
+  /* Run rounds */
+  alive = ntanks;
+  for (i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
+    int j;
+
+    tanks_run_turn(&game, mytanks, ntanks);
+    fprintf(stdout, "[\n");
+    alive = ntanks;
+    for (j = 0; j < ntanks; j += 1) {
+      struct tank *t = &(mytanks[j]);
+
+      if (t->killer) {
+        alive -= 1;
+        fprintf(stdout, " 0,\n");
+      } else {
+        int k;
+        int flags   = 0;
+        int sensors = 0;
+
+        for (k = 0; k < TANK_MAX_SENSORS; k += 1) {
+          if (t->sensors[k].triggered) {
+            sensors |= (1 << k);
+          }
+        }
+        if (t->turret.firing) {
+          flags |= 1;
+        }
+        if (t->led) {
+          flags |= 2;
+        }
+        fprintf(stdout, " [%d,%d,%.2f,%.2f,%d,%d],\n",
+               (int)(t->position[0]),
+               (int)(t->position[1]),
+               t->angle,
+               t->turret.current,
+               flags,
+               sensors);
+      }
+    }
+    fprintf(stdout, "],\n");
+  }
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -391,7 +444,6 @@ main(int argc, char *argv[])
   int                     order[MAX_TANKS];
   int                     ntanks = 0;
   int                     i;
-  int                     alive;
 
   lenv[0].name = NULL;
   lenv[0].proc = NULL;
@@ -457,8 +509,8 @@ main(int argc, char *argv[])
 
   /* Position tanks */
   {
-    int x = 50;
-    int y = 50;
+    int x = SPACING/2;
+    int y = SPACING/2;
 
     for (i = 0; i < ntanks; i += 1) {
       mytanks[i].position[0] = (float)x;
@@ -475,48 +527,7 @@ main(int argc, char *argv[])
   }
 
   print_header(stdout, &game, myftanks, mytanks, ntanks);
-
-  /* Run rounds */
-  alive = ntanks;
-  for (i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
-    int j;
-
-    tanks_run_turn(&game, mytanks, ntanks);
-    fprintf(stdout, "[\n");
-    alive = ntanks;
-    for (j = 0; j < ntanks; j += 1) {
-      struct tank *t = &(mytanks[j]);
-
-      if (t->killer) {
-        alive -= 1;
-        fprintf(stdout, " 0,\n");
-      } else {
-        int k;
-        int flags   = 0;
-        int sensors = 0;
-
-        for (k = 0; k < TANK_MAX_SENSORS; k += 1) {
-          if (t->sensors[k].triggered) {
-            sensors |= (1 << k);
-          }
-        }
-        if (t->turret.firing) {
-          flags |= 1;
-        }
-        if (t->led) {
-          flags |= 2;
-        }
-        fprintf(stdout, " [%d,%d,%.2f,%.2f,%d,%d],\n",
-               (int)(t->position[0]),
-               (int)(t->position[1]),
-               t->angle,
-               t->turret.current,
-               flags,
-               sensors);
-      }
-    }
-    fprintf(stdout, "],\n");
-  }
+  print_rounds(stdout, &game, myftanks, mytanks, ntanks);
 
   print_footer(stdout);
 
