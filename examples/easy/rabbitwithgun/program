@@ -1,0 +1,26 @@
+100 100 set-speed!
+
+( Always set turret to 180 degrees )
+180 set-turret!
+
+( Vary walk 1/8 of the time )
+8 random
+0 =
+{
+  2 random
+  0 =
+  { 70 100 set-speed! }
+  { 100 70 set-speed! }
+  ifelse
+}
+if
+
+( If you see something, shoot it )
+0 sensor?
+{ fire! }
+if
+
+( Turn, if trouble lies ahead )
+1 sensor?
+{ 0 100 set-speed! }
+if

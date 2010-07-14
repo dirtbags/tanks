@@ -12,6 +12,7 @@
 #define DUMP_s(v) DUMPf("%s = %s", #v, v)
 #define DUMP_c(v) DUMPf("%s = %c", #v, v)
 #define DUMP_f(v) DUMPf("%s = %f", #v, v)
+#define DUMP_p(v) DUMPf("%s = %p", #v, v)
 #define DUMP_xy(v) DUMPf("%s = (%f, %f)", #v, v[0], v[1]);
 #define DUMP_angle(v) DUMPf("%s = %.3fπ", #v, (v/PI));
 
@@ -41,8 +42,8 @@ tank_fire(struct tank *tank)
 void
 tank_set_speed(struct tank *tank, float left, float right)
 {
-  tank->speed.desired[0] = left;
-  tank->speed.desired[1] = right;
+  tank->speed.desired[0] = min(max(left, -100), 100);
+  tank->speed.desired[1] = min(max(right, -100), 100);
 }
 
 float
@@ -90,32 +91,69 @@ rotate_point(float angle, float point[2])
 
 
 static void
-tank_sensor_calc(struct tanks_game *game,
-                 struct tank *this,
-                 struct tank *that,
-                 float dist2)
+tanks_fire_cannon(struct tanks_game *game,
+                  struct tank *this,
+                  struct tank *that,
+                  float vector[2],
+                  float dist2)
 {
-  float tpos[2];
-  int   i;
+  float theta = this->angle + this->turret.current;
+  float rpos[2];
 
-  /* Translate other tank's position to make us the origin */
-  for (i = 0; i < 2; i += 1) {
-    tpos[i] = that->position[i] - this->position[i];
+  /* If someone's a crater, this is easy */
+  if (this->killer || that->killer) {
+    return;
+  }
+
+  /* Did they collide? */
+  if (dist2 < TANK_COLLISION_ADJ2) {
+    this->killer = that;
+    this->cause_death = "collision";
+
+    that->killer = this;
+    that->cause_death = "collision";
+
+    return;
+  }
+
+  /* No need to check if it's not even firing */
+  if (! this->turret.firing) {
+    return;
+  }
+
+  /* Also no need to check if it's outside cannon range */
+  if (dist2 > TANK_CANNON_ADJ2) {
+    return;
   }
 
   /* Did this shoot that?  Rotate point by turret degrees, and if |y| <
      TANK_RADIUS, we have a hit. */
-  if ((this->turret.firing) && (dist2 <= TANK_CANNON_RANGE)) {
-    int   theta = this->angle + this->turret.current;
-    float rpos[2];
+  rpos[0] = vector[0];
+  rpos[1] = vector[1];
+  rotate_point(-theta, rpos);
+  if (fabsf(rpos[1]) < TANK_RADIUS) {
+    that->killer = this;
+    that->cause_death = "shot";
+  }
+}
 
-    rpos[0] = tpos[0];
-    rpos[1] = tpos[1];
-    rotate_point(-theta, rpos);
-    if (fabsf(rpos[1]) < TANK_RADIUS) {
-      that->killer = this;
-      that->cause_death = "shot";
-    }
+static void
+tanks_sensor_calc(struct tanks_game *game,
+                  struct tank       *this,
+                  struct tank       *that,
+                  float              vector[2],
+                  float              dist2)
+{
+  int   i;
+
+  /* If someone's a crater, this is easy */
+  if (this->killer || that->killer) {
+    return;
+  }
+
+  /* If they're not inside the max sensor, just skip it */
+  if (dist2 > TANK_SENSOR_ADJ2) {
+    return;
   }
 
   /* Calculate sensors */
@@ -123,6 +161,11 @@ tank_sensor_calc(struct tanks_game *game,
     float theta;
     float rpos[2];
     float m_r, m_s;
+
+    if (0 == this->sensors[i].range) {
+      /* Sensor doesn't exist */
+      continue;
+    }
 
     /* No need to re-check this sensor if it's already firing */
     if (this->sensors[i].triggered) {
@@ -139,11 +182,10 @@ tank_sensor_calc(struct tanks_game *game,
     if (this->sensors[i].turret) {
       theta += this->turret.current;
     }
-    theta = fmodf(theta, 2*PI);
 
-    /* Rotate tpos by theta */
-    rpos[0] = tpos[0];
-    rpos[1] = tpos[1];
+    /* Rotate their position by theta */
+    rpos[0] = vector[0];
+    rpos[1] = vector[1];
     rotate_point(-theta, rpos);
 
     /* Sensor is symmetrical, we can consider only top quadrants */
@@ -152,14 +194,6 @@ tank_sensor_calc(struct tanks_game *game,
     /* Compute inverse slopes to tank and of our sensor */
     m_s = 1 / tanf(this->sensors[i].width / 2);
     m_r = rpos[0] / rpos[1];
-
-    if (1 == i) {
-      DUMP();
-      DUMP_angle(this->angle);
-      DUMP_angle(theta);
-      DUMP_xy(tpos);
-      DUMP_xy(rpos);
-    }
 
     /* If our inverse slope is less than theirs, they're inside the arc */
     if (m_r >= m_s) {
@@ -177,52 +211,30 @@ tank_sensor_calc(struct tanks_game *game,
 }
 
 void
-do_shit_with(struct tanks_game *game,
-             struct tank *this,
-             struct tank *that)
+compute_vector(struct tanks_game *game,
+               float              vector[2],
+               float             *dist2,
+               struct tank       *this,
+               struct tank       *that)
 {
-  float vector[2];
-  float dist2;                  /* distance squared */
-  float tpos;                   /* Translated position */
   int   i;
-
-  /* Don't bother if that is dead */
-  /* XXX: If three tanks occupy the same space at the same time, only
-     the first two will collide. */
-  if ((this->killer) || (that->killer)) {
-    return;
-  }
 
   /* Establish shortest vector from center of this to center of that,
    * taking wrapping into account */
   for (i = 0; i < 2; i += 1) {
     float halfsize = game->size[i] / 2;
 
-    vector[i] = halfsize - fabsf(that->position[i] - this->position[i] - halfsize);
+    vector[i] = that->position[i] - this->position[i];
+    if (vector[i] > halfsize) {
+      vector[i] = vector[i] - game->size[i];
+    }
+    else if (vector[i] < -halfsize) {
+      vector[i] = game->size[i] + vector[i];
+    }
   }
 
   /* Compute distance^2 for range comparisons */
-  dist2 = sq(vector[0]) + sq(vector[1]);
-
-  /* If they're not within sensor range, there's nothing to do. */
-  if (dist2 > TANK_SENSOR_ADJ2) {
-    return;
-  }
-
-  /* Did they collide? */
-  if (dist2 < TANK_COLLISION_ADJ2) {
-    this->killer = that;
-    this->cause_death = "collision";
-
-    that->killer = this;
-    that->cause_death = "collision";
-
-    return;
-  }
-
-  /* Figure out who's whomin' whom */
-  tank_sensor_calc(game, this, that, dist2);
-  tank_sensor_calc(game, that, this, dist2);
+  *dist2 = sq(vector[0]) + sq(vector[1]);
 }
 
 void
@@ -232,6 +244,7 @@ tanks_move_tank(struct tanks_game *game,
   int   i;
   float movement;
   float angle;
+  int   dir = 1;
 
   /* Rotate the turret */
   {
@@ -282,7 +295,6 @@ tanks_move_tank(struct tanks_game *game,
     float So, Si;
     float r;
     float theta;
-    int   dir;
 
     /* The first thing Paul's code does is find "friction", which seems
        to be a penalty for having the treads go in opposite directions.
@@ -322,8 +334,8 @@ tanks_move_tank(struct tanks_game *game,
   {
     float m[2];
 
-    m[0] = cosf(tank->angle) * movement;
-    m[1] = sinf(tank->angle) * movement;
+    m[0] = cosf(tank->angle) * movement * dir;
+    m[1] = sinf(tank->angle) * movement * dir;
 
     for (i = 0; i < 2; i += 1) {
       tank->position[i] = fmodf(tank->position[i] + m[i] + game->size[i],
@@ -335,33 +347,69 @@ tanks_move_tank(struct tanks_game *game,
 void
 tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks)
 {
-  int i, j;
+  int   i, j;
+  float vector[2];
+  float dist2;                  /* distance squared */
 
-  /* Run programs */
-  for (i = 0; i < ntanks; i += 1) {
-    if (! tanks[i].killer) {
-      tanks[i].run(&tanks[i], &tanks[i].udata);
-    }
+  /* It takes (at least) two to tank-o */
+  if (ntanks < 2) {
+    return;
   }
 
-  /* Clear sensors */
+  /* Charge cannons and reset sensors */
   for (i = 0; i < ntanks; i += 1) {
+    if (tanks[i].turret.firing) {
+      tanks[i].turret.firing = 0;
+      tanks[i].turret.recharge = TANK_CANNON_RECHARGE;
+    }
+    if (tanks[i].killer) continue;
+    if (tanks[i].turret.recharge) {
+      tanks[i].turret.recharge -= 1;
+    }
     for (j = 0; j < TANK_MAX_SENSORS; j += 1) {
       tanks[i].sensors[j].triggered = 0;
     }
   }
 
-  /* Move */
+  /* Move tanks */
   for (i = 0; i < ntanks; i += 1) {
-    if (! tanks[i].killer) {
-      tanks_move_tank(game, &(tanks[i]));
+    if (tanks[i].killer) continue;
+    tanks_move_tank(game, &(tanks[i]));
+  }
+
+  /* Probe sensors */
+  for (i = 0; i < ntanks; i += 1) {
+    if (tanks[i].killer) continue;
+    for (j = i + 1; j < ntanks; j += 1) {
+      struct tank *this = &tanks[i];
+      struct tank *that = &tanks[j];
+
+      compute_vector(game, vector, &dist2, this, that);
+      tanks_sensor_calc(game, this, that, vector, dist2);
+      vector[0] = -vector[0];
+      vector[1] = -vector[1];
+      tanks_sensor_calc(game, that, this, vector, dist2);
     }
   }
 
-  /* Sense and fire */
+  /* Run programs */
   for (i = 0; i < ntanks; i += 1) {
+    if (tanks[i].killer) continue;
+    tanks[i].run(&tanks[i], tanks[i].udata);
+  }
+
+  /* Fire cannons and check for crashes */
+  for (i = 0; i < ntanks; i += 1) {
+    if (tanks[i].killer) continue;
     for (j = i + 1; j < ntanks; j += 1) {
-      do_shit_with(game, &(tanks[i]), &(tanks[j]));
+      struct tank *this = &tanks[i];
+      struct tank *that = &tanks[j];
+
+      compute_vector(game, vector, &dist2, this, that);
+      tanks_fire_cannon(game, this, that, vector, dist2);
+      vector[0] = -vector[0];
+      vector[1] = -vector[1];
+      tanks_fire_cannon(game, that, this, vector, dist2);
     }
   }
 }

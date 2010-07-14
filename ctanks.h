@@ -4,13 +4,14 @@
 /* Some useful constants */
 #define PI 3.14159265358979323846
 
-#define TANK_MAX_SENSORS    10
-#define TANK_RADIUS         7.5
-#define TANK_SENSOR_RANGE   100
-#define TANK_CANNON_RANGE   (TANK_SENSOR_RANGE / 2)
-#define TANK_MAX_ACCEL      35
-#define TANK_MAX_TURRET_ROT (PI/3)
-#define TANK_TOP_SPEED      7
+#define TANK_MAX_SENSORS     10
+#define TANK_RADIUS          7.5
+#define TANK_SENSOR_RANGE    100
+#define TANK_CANNON_RECHARGE 20 /* Turns to recharge cannon */
+#define TANK_CANNON_RANGE    (TANK_SENSOR_RANGE / 2)
+#define TANK_MAX_ACCEL       35
+#define TANK_MAX_TURRET_ROT  (PI/3)
+#define TANK_TOP_SPEED       7
 
 /* (tank radius + tank radius)^2 */
 #define TANK_COLLISION_ADJ2 \
@@ -22,9 +23,12 @@
 #define TANK_SENSOR_ADJ2 \
   ((TANK_SENSOR_RANGE + TANK_RADIUS) * (TANK_SENSOR_RANGE + TANK_RADIUS))
 
+#define TANK_CANNON_ADJ2 \
+  ((TANK_CANNON_RANGE + TANK_RADIUS) * (TANK_CANNON_RANGE + TANK_RADIUS))
 
 #ifndef rad2deg
 #define rad2deg(r) ((int)(180*(r)/PI))
+#define deg2rad(r) ((r*PI)/180)
 #endif
 
 #ifndef max
@@ -42,7 +46,6 @@ struct sensor {
   float angle;
   float width;
   int   range;
-  int   range_adj2;             /* (range + TANK_RADIUS)^2 */
   int   turret;                 /* Mounted to turret? */
   int   triggered;
 };

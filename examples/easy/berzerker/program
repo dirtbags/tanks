@@ -1,0 +1,15 @@
+2 random
+0 =
+{ 50 100 set-speed! }
+{ 100 50 set-speed! }
+ifelse
+
+4 random
+0 =
+{ 360 random  set-turret! }
+if
+
+30 random
+0 =
+{ fire! }
+if

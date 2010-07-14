@@ -114,7 +114,7 @@ function Tank(ctx, width, height, color, sensors) {
         ctx.fillRect(-7,  4, 15, 5);
         ctx.rotate(this.turret);
         if (this.fire) {
-            ctx.fillStyle = ("rgba(68,204,68," + this.fire/5 +")");
+            ctx.fillStyle = ("rgba(128,128,255," + this.fire/5 + ")");
             ctx.fillRect(0, -1, 45, 2);
             this.fire -= 1;
         } else {
@@ -210,8 +210,8 @@ function start(game) {
         }
     }
 
-    //loop_id = setInterval(update, 66);
-    loop_id = setInterval(update, 200);
+    loop_id = setInterval(update, 66);
+    //loop_id = setInterval(update, 400);
     if (fps) {
         setInterval(update_fps, 1000);
     }

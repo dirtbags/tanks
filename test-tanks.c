@@ -7,8 +7,11 @@
 void
 test_run(struct tank *tank, void *unused)
 {
-  tank_set_speed(tank, 61, 60);
-  tank_set_turret(tank, 0);
+  tank_set_speed(tank, -60, -61);
+  tank_set_turret(tank, tank->turret.desired + PI/15);
+  if (tank->sensors[0].triggered) {
+    tank_fire(tank);
+  }
 }
 
 void
@@ -25,7 +28,7 @@ main(int argc, char *argv[])
   int               i;
 
   game.size[0] = 600;
-  game.size[1] = 600;
+  game.size[1] = 200;
 
   printf("[\n");
   printf("[%d, %d, %d],\n",
@@ -66,6 +69,11 @@ main(int argc, char *argv[])
       mytanks[i].sensors[4].range = 100;
       mytanks[i].sensors[4].turret = 1;
 
+      mytanks[i].sensors[5].angle = 0;
+      mytanks[i].sensors[5].width = PI*1.99;
+      mytanks[i].sensors[5].range = 80;
+      mytanks[i].sensors[5].turret = 0;
+
       for (j = 0; j < TANK_MAX_SENSORS; j += 1) {
         struct sensor *s = &(mytanks[i].sensors[j]);
 
@@ -87,7 +95,7 @@ main(int argc, char *argv[])
   printf("// Rounds\n");
   printf("[\n");
 
-  for (i = 0; i < 200; i += 1) {
+  for (i = 0; i < 100; i += 1) {
     int j;
 
     tanks_run_turn(&game, mytanks, NTANKS);
