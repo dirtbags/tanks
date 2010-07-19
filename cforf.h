@@ -119,7 +119,11 @@ void forf_env_init(struct forf_env         *env,
 /** The type of a getch function (used for parsing) */
 typedef int (forf_getch_func)(void *);
 
-/** Parse something by calling getch(datum) */
+/** Parse something by calling getch(datum)
+ *
+ * Returns the character at which an error was encountered, or
+ * 0 for successful parse.
+ */
 int forf_parse_stream(struct forf_env *env,
                       forf_getch_func *getch,
                       void            *datum);

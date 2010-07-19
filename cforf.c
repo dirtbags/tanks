@@ -211,6 +211,8 @@ forf_pop_stack(struct forf_env *env)
       case forf_type_stack_begin:
         depth -= 1;
         break;
+      default:
+        break;
     }
   }
   s.top = s.size;
@@ -286,6 +288,8 @@ forf_stack_move_value(struct forf_env *env,
         break;
       case forf_type_stack_end:
         depth -= 1;
+        break;
+      default:
         break;
     }
   } while (depth > 0);

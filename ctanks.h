@@ -10,7 +10,7 @@
 #define TANK_CANNON_RECHARGE 20 /* Turns to recharge cannon */
 #define TANK_CANNON_RANGE    (TANK_SENSOR_RANGE / 2)
 #define TANK_MAX_ACCEL       35
-#define TANK_MAX_TURRET_ROT  (PI/3)
+#define TANK_MAX_TURRET_ROT  (PI/10)
 #define TANK_TOP_SPEED       7
 
 /* (tank radius + tank radius)^2 */
@@ -75,6 +75,8 @@ struct tank {
 };
 
 void tank_init(struct tank *tank, tank_run_func *run, void *udata);
+void tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks);
+
 
 /*
  *
@@ -102,5 +104,6 @@ int tank_get_sensor(struct tank *tank, int sensor_num);
 
 /** Set the LED state */
 void tank_set_led(struct tank *tank, int active);
+
 
 #endif /* __CTANKS_H__ */

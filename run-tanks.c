@@ -20,8 +20,10 @@
 
 struct forftank {
   struct forf_env  env;
+  int              error_pos;
   char             color[7];    /* "ff0088" */
   char             name[50];
+  char            *path;
 
   struct forf_stack  _prog;
   struct forf_value  _progvals[CSTACK_SIZE];
@@ -40,7 +42,7 @@ forf_print_val(struct forf_value *val)
 {
   switch (val->type) {
     case forf_type_number:
-      printf("%d", val->v.i);
+      printf("%ld", val->v.i);
       break;
     case forf_type_proc:
       printf("[proc %p]", val->v.p);
@@ -232,7 +234,6 @@ ft_read_program(struct forftank         *ftank,
                 struct forf_lexical_env *lenv,
                 char                    *path)
 {
-  int   ret;
   char  progpath[256];
   FILE *f;
 
@@ -242,13 +243,9 @@ ft_read_program(struct forftank         *ftank,
   if (! f) return 0;
 
   /* Parse program */
-  ret = forf_parse_file(&ftank->env, f);
+  ftank->error_pos = forf_parse_file(&ftank->env, f);
   fclose(f);
-  if (ret) {
-    fprintf(stderr, "Parse error in %s, character %d: %s\n",
-            progpath,
-            ret,
-            forf_error_str[ftank->env.error]);
+  if (ftank->error_pos) {
     return 0;
   }
 
@@ -320,6 +317,8 @@ ft_read_tank(struct forftank         *ftank,
 {
   int ret;
 
+  ftank->path = path;
+
   /* What is your name? */
   ret = ft_read_file(ftank->name, sizeof(ftank->name), path, "name");
   if (! ret) {
@@ -384,7 +383,6 @@ print_footer(FILE *f)
 void
 print_rounds(FILE *f,
              struct tanks_game *game,
-             struct forftank   *forftanks,
              struct tank       *tanks,
              int                ntanks)
 {
@@ -396,15 +394,15 @@ print_rounds(FILE *f,
   for (i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
     int j;
 
-    tanks_run_turn(&game, mytanks, ntanks);
-    fprintf(stdout, "[\n");
+    tanks_run_turn(game, tanks, ntanks);
+    fprintf(f, "[\n");
     alive = ntanks;
     for (j = 0; j < ntanks; j += 1) {
-      struct tank *t = &(mytanks[j]);
+      struct tank *t = &(tanks[j]);
 
       if (t->killer) {
         alive -= 1;
-        fprintf(stdout, " 0,\n");
+        fprintf(f, " 0,\n");
       } else {
         int k;
         int flags   = 0;
@@ -421,7 +419,7 @@ print_rounds(FILE *f,
         if (t->led) {
           flags |= 2;
         }
-        fprintf(stdout, " [%d,%d,%.2f,%.2f,%d,%d],\n",
+        fprintf(f, " [%d,%d,%.2f,%.2f,%d,%d],\n",
                (int)(t->position[0]),
                (int)(t->position[1]),
                t->angle,
@@ -430,7 +428,27 @@ print_rounds(FILE *f,
                sensors);
       }
     }
-    fprintf(stdout, "],\n");
+    fprintf(f, "],\n");
+  }
+}
+
+void
+print_standings(FILE            *f,
+                struct forftank *ftanks,
+                struct tank     *tanks,
+                int              ntanks)
+{
+  int i;
+
+  for (i = 0; i < ntanks; i += 1) {
+    /* &tank path cause &killer parse_error_pos lasterr */
+    fprintf(f, "%p\t%s\t%s\t%p\t%d\t%s\n",
+            &(tanks[i]),
+            ftanks[i].path,
+            tanks[i].cause_death,
+            tanks[i].killer,
+            ftanks[i].error_pos,
+            forf_error_str[ftanks[i].env.error]);
   }
 }
 
@@ -527,9 +545,23 @@ main(int argc, char *argv[])
   }
 
   print_header(stdout, &game, myftanks, mytanks, ntanks);
-  print_rounds(stdout, &game, myftanks, mytanks, ntanks);
-
+  print_rounds(stdout, &game, mytanks, ntanks);
   print_footer(stdout);
+
+  /* Output standings to fd3.
+  *
+  * fd 3 is normally closed, so this won't normally do anything.
+  * To output to fd3 from the shell, you'll need to do something like this:
+  *
+  *     ./run-tanks 3>standing
+  **/
+  {
+    FILE *standings = fdopen(3, "w");
+
+    if (standings) {
+      print_standings(standings, myftanks, mytanks, ntanks);
+    }
+  }
 
   return 0;
 }

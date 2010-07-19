@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#define BASE_PATH "/tmp/"
 
 struct string {
   char   *s;
@@ -71,6 +74,8 @@ read_item(FILE *f, struct string *str)
 {
   int c;
 
+  str->len = 0;
+
   while (1) {
     c = fgetc(f);
     switch (c) {
@@ -100,6 +105,7 @@ read_pair(FILE *f, struct string *key, struct string *val)
   return read_item(f, val);
 }
 
+/* This is ugly and I dislike it. */
 #define new_string(name, size)                  \
   char _##name[size];                           \
   struct string name = {_##name, size, 0 }
@@ -111,13 +117,58 @@ main(int argc, char *argv[])
 
   new_string(key, 20);
   new_string(val, 8192);
+  new_string(token, 40);
   new_string(name, 20);
-  new_string(author, 20);
+  new_string(author, 60);
+  new_string(color, 10);
+  new_string(program, 8192);
 
   printf("Content-type: text/plain\n\n");
 
   while (! feof(stdin)) {
     read_pair(stdin, &key, &val);
+    if (0 == string_cmp(&key, "token", 5)) {
+      string_cpy(&token, &key);
+    } else if (0 == string_cmp(&key, "name", 4)) {
+      string_cpy(&name, &key);
+    } else if (0 == string_cmp(&key, "author", 6)) {
+      string_cpy(&author, &key);
+    } else if (0 == string_cmp(&key, "color", 5)) {
+      string_cpy(&color, &key);
+    } else if (0 == string_cmp(&key, "program", 7)) {
+      string_cpy(&program, &key);
+    } else if ((3 == key.len) && ('s' == key.s[0])) {
+      /* sensor dealie, key = "s[0-9][rawt]" */
+      int n = key.s[1] - '0';
+      int i;
+      int p;
+
+      if (! (n >= 0) && (n <= 9)) {
+        break;
+      }
+      if (val.len > 3) {
+        break;
+      }
+      val.s[val.len] = '\0';
+      i = atoi(val.s);
+
+      switch (key.s[2]) {
+        case 'r':
+          p = 0;
+          break;
+        case 'a':
+          p = 1;
+          break;
+        case 'w':
+          p = 2;
+          break;
+        default:
+          p = 3;
+          break;
+      }
+
+      sensor[n][p] = i;
+    }
     write(1, key.s, key.len);
     write(1, "=", 1);
     write(1, val.s, val.len);
