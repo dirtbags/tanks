@@ -51,8 +51,8 @@ function design() {
         frame += 1;
         canvas.width = canvas.width;
         tank.set_state(100, 100, Math.PI * 1.5, turret, 0, 0);
-        tank.draw_tank();
         tank.draw_sensors();
+        tank.draw_tank();
     }
 
     loop_id = setInterval(update, 66);

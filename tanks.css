@@ -1,0 +1,26 @@
+body {
+    background-color: #444444;
+    color: #c0c0c0;
+}
+table {
+    border-collapse: collapse;
+}
+td {
+    border: solid 1px #c0c0c0;
+}
+.swatch {
+    color: #000000;
+}
+#preview {
+    float: right;
+}
+#sensors input {
+    width: 5em;
+}
+#program textarea {
+    width: 100%;
+    min-height: 20em;
+}
+a {
+    color: #00c080;
+}

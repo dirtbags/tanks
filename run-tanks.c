@@ -21,7 +21,7 @@
 struct forftank {
   struct forf_env  env;
   int              error_pos;
-  char             color[7];    /* "ff0088" */
+  char             color[8];    /* "#ff0088" */
   char             name[50];
   char            *path;
 
@@ -338,7 +338,7 @@ ft_read_tank(struct forftank         *ftank,
   /* What is your favorite color? */
   ret = ft_read_file(ftank->color, sizeof(ftank->color), path, "color");
   if (! ret) {
-    strncpy(ftank->color, "808080", sizeof(ftank->color));
+    strncpy(ftank->color, "#808080", sizeof(ftank->color));
   }
 
   return 1;
@@ -356,7 +356,7 @@ print_header(FILE              *f,
   fprintf(f, "[[%d, %d, %d],[\n",
          (int)game->size[0], (int)game->size[1], TANK_CANNON_RANGE);
   for (i = 0; i < ntanks; i += 1) {
-    fprintf(f, " [\"#%s\",[", forftanks[i].color);
+    fprintf(f, " [\"%s\",[", forftanks[i].color);
     for (j = 0; j < TANK_MAX_SENSORS; j += 1) {
       struct sensor *s = &(tanks[i].sensors[j]);
 
