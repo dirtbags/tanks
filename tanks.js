@@ -147,8 +147,8 @@ function Tank(ctx, width, height, color, sensors) {
     }
 }
 
-function start(game) {
-    var canvas = document.getElementById('battlefield');
+function start(id, game) {
+    var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
     var loop_id;
 

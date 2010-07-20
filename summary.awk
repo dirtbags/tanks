@@ -19,8 +19,9 @@ BEGIN {
 
     print "    <h2>Resources</h2>";
     print "    <ul>";
+    print "      <li><a href=\"intro.html\">Introduction</a></li>";
     print "      <li><a href=\"forf.html\">Forf manual</a></li>";
-    print "      <li><a href=\"tanksprocs.html\">Tanks procedures</a></li>";
+    print "      <li><a href=\"procs.html\">Tanks procedures</a></li>";
     print "      <li><a href=\"designer.html\">Tanks designer</a></li>";
     print "    </ul>";
 

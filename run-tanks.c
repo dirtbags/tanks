@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ctanks.h"
-#include "cforf.h"
+#include "forf.h"
 #include "dump.h"
 
 #define MAX_TANKS 50

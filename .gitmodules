@@ -1,0 +1,3 @@
+[submodule "forf"]
+	path = forf
+	url = woozle.org:projects/forf

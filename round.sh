@@ -21,7 +21,7 @@ cat <<EOF >$fn
     <link rel="stylesheet" href="tanks.css" type="text/css">
     <script type="application/javascript">
       function go() {
-        start(
+        start("battlefield",
 // Start JSON data
 EOF
 ./run-tanks players/* >>$fn 3>$rfn

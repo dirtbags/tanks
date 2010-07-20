@@ -2,7 +2,22 @@
 <html>
   <head>
     <title>Tank Designer</title>
-    <link rel="stylesheet" href="tanks.css" type="text/css">
+    <link rel="stylesheet" href="dirtbags.css" type="text/css">
+    <style type="text/css">
+      #preview {
+        float: right;
+      }
+      #sensors input {
+        width: 5em;
+      }
+      #program textarea {
+        width: 100%;
+        min-height: 20em;
+      }
+      td {
+        text-align: left;
+      }
+    </style>
     <script type="application/javascript" src="tanks.js"></script>
     <script type="application/javascript" src="designer.js"></script>
     <script type="application/javascript">
@@ -10,6 +25,7 @@
     </script>
   </head>
   <body>
+    <h1>Tank Designer</h1>
     <div id="preview"><canvas id="design"></canvas><p id="debug"></p></div>
     <form>
       <fieldset id="metadata">
