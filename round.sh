@@ -1,5 +1,13 @@
 #! /bin/sh
 
+if [ "$#" -gt 0 ]; then
+    tanks="$@"
+else
+    echo "Usage: $0 tank1 tank2 [...]"
+    exit 1
+fi
+
+
 if [ -f next-round ]; then
     next=$(cat next-round)
 else
@@ -18,13 +26,13 @@ cat <<EOF >$fn
   <head>
     <title>Tanks Round $next</title>
     <script type="application/javascript" src="tanks.js"></script>
-    <link rel="stylesheet" href="tanks.css" type="text/css">
+    <link rel="stylesheet" href="dirtbags.css" type="text/css">
     <script type="application/javascript">
       function go() {
         start("battlefield",
 // Start JSON data
 EOF
-./run-tanks players/* >>$fn 3>$rfn
+./run-tanks $tanks >>$fn 3>$rfn
 cat <<EOF >>$fn
 // end JSON data
       );
@@ -43,7 +51,7 @@ cat <<EOF >>$fn
 </html>
 EOF
 
-./summary.awk > summary.html
+./summary.awk $tanks > summary.html
 
 echo "done."
 

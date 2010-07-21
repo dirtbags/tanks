@@ -1,45 +1,35 @@
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 
-#define BASE_PATH "/tmp/"
+#define BASE_PATH "/tmp/tanks/"
 
-struct string {
-  char   *s;
+struct {
+  char   *name;
   size_t  size;
-  size_t  len;
+} entries[] = {
+  {"name", 20},
+  {"author", 40},
+  {"color", 10},
+  {"program", 8192},
+  {NULL, 0}
 };
 
-void
-string_append(struct string *str, char c)
-{
-  if (str->len < str->size) {
-    str->s[str->len++] = c;
-  }
-}
+
+size_t inlen;
 
 int
-string_cmp(struct string *a, char *b, size_t blen)
+read_char()
 {
-  if (a->len > blen) {
-    return 1;
-  } else if (a->len < blen) {
-    return -1;
-  } else {
-    return memcmp(a->s, b, blen);
+  if (inlen) {
+    inlen -= 1;
+    return getchar();
   }
-}
-
-void
-string_cpy(struct string *dst, struct string *src)
-{
-  if (dst->size < src->len) {
-    dst->len = dst->size;
-  } else {
-    dst->len = src->len;
-  }
-  memcpy(dst->s, src->s, dst->len);
+  return EOF;
 }
 
 char
@@ -58,10 +48,10 @@ tonum(int c)
 }
 
 char
-read_hex(FILE *f)
+read_hex()
 {
-  int  a   = fgetc(f);
-  int  b   = fgetc(f);
+  int a = read_char();
+  int b = read_char();
 
   return tonum(a)*16 + tonum(b);
 }
@@ -69,90 +59,149 @@ read_hex(FILE *f)
 /* Read a key or a value.  Since & and = aren't supposed to appear
    outside of boundaries, we can use the same function for both.
 */
-int
-read_item(FILE *f, struct string *str)
+size_t
+read_item(char *str, size_t maxlen)
 {
-  int c;
-
-  str->len = 0;
+  int    c;
+  size_t pos = 0;
 
   while (1) {
-    c = fgetc(f);
+    c = read_char();
     switch (c) {
       case EOF:
-        return 0;
-        break;
       case '=':
       case '&':
-        return 1;
-        break;
+        str[pos] = '\0';
+        return pos;
       case '%':
-        string_append(str, read_hex(f));
+        c = read_hex();
         break;
-      default:
-        string_append(str, c);
+      case '+':
+        c = ' ';
         break;
+    }
+    if (pos < maxlen - 1) {
+      str[pos] = c;
+      pos += 1;
+    }
+  }
+}
+
+size_t
+copy_item(char *filename, size_t maxlen)
+{
+  FILE   *f;
+  char    path[132];
+  int     c;
+  size_t  pos = 0;
+
+  snprintf(path, sizeof(path),
+           BASE_PATH "%05d.%s",
+           getpid(), filename);
+  f = fopen(path, "w");
+  if (! f) {
+    /* Just send it to the bit bucket */
+    maxlen = 0;
+  }
+
+  while (1) {
+    c = read_char();
+    switch (c) {
+      case EOF:
+      case '=':
+      case '&':
+        if (f) fclose(f);
+        return pos;
+      case '%':
+        c = read_hex();
+        break;
+      case '+':
+        c = ' ';
+        break;
+    }
+    if (pos < maxlen) {
+      fputc(c, f);
+      pos += 1;
     }
   }
 }
 
 int
-read_pair(FILE *f, struct string *key, struct string *val)
+croak(char *msg)
 {
-  if (! read_item(f, key)) {
-    return 0;
-  }
-  return read_item(f, val);
-}
+  int  i;
+  char path[132];
 
-/* This is ugly and I dislike it. */
-#define new_string(name, size)                  \
-  char _##name[size];                           \
-  struct string name = {_##name, size, 0 }
+  for (i = 0; entries[i].name; i += 1) {
+    snprintf(path, sizeof(path),
+             BASE_PATH "%05d.%s",
+             getpid(), entries[i].name);
+    unlink(path);
+  }
+
+  printf("Content-type: text/html\n\n");
+  printf("<html><head>\n");
+  printf("<link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">\n");
+  printf("<title>Tank submission error</title>\n");
+  printf("</head><body><h1>Tank submission error</h1>\n");
+  if (msg) {
+    printf("<p>%s.</p>\n", msg);
+  } else {
+    printf("<p>Something went wrong.</p>.\n");
+  }
+  printf("<p>Sorry it didn't work out.</p>\n");
+  printf("<p>You could go back and try again, though.</p>\n");
+  printf("</body></html>\n");
+
+  return 0;
+}
 
 int
 main(int argc, char *argv[])
 {
-  int sensor[10][4];
+  int    sensor[10][4];
+  char   key[20];
+  char   token[40];
+  size_t len;
 
-  new_string(key, 20);
-  new_string(val, 8192);
-  new_string(token, 40);
-  new_string(name, 20);
-  new_string(author, 60);
-  new_string(color, 10);
-  new_string(program, 8192);
+  memset(sensor, 0, sizeof(sensor));
+  token[0] = '\0';
 
-  printf("Content-type: text/plain\n\n");
+  {
+    char *rm = getenv("REQUEST_METHOD");
 
-  while (! feof(stdin)) {
-    read_pair(stdin, &key, &val);
-    if (0 == string_cmp(&key, "token", 5)) {
-      string_cpy(&token, &key);
-    } else if (0 == string_cmp(&key, "name", 4)) {
-      string_cpy(&name, &key);
-    } else if (0 == string_cmp(&key, "author", 6)) {
-      string_cpy(&author, &key);
-    } else if (0 == string_cmp(&key, "color", 5)) {
-      string_cpy(&color, &key);
-    } else if (0 == string_cmp(&key, "program", 7)) {
-      string_cpy(&program, &key);
-    } else if ((3 == key.len) && ('s' == key.s[0])) {
+    if (! (rm && (0 == strcmp(rm, "POST")))) {
+      printf("405 Method not allowed\n");
+      printf("Allow: POST\n");
+      printf("Content-type: text/html\n");
+      printf("\n");
+      printf("<h1>Method not allowed</h1>\n");
+      printf("<p>I only speak POST.  Sorry.</p>\n");
+      return 0;
+    }
+
+    inlen = atoi(getenv("CONTENT_LENGTH"));
+  }
+
+  while (inlen) {
+    len = read_item(key, sizeof(key));
+    if (0 == strcmp(key, "token")) {
+      read_item(token, sizeof(token));
+    } else if ((3 == len) && ('s' == key[0])) {
       /* sensor dealie, key = "s[0-9][rawt]" */
-      int n = key.s[1] - '0';
-      int i;
-      int p;
+      char val[5];
+      int  n = key[1] - '0';
+      int  i;
+      int  p;
+
+      read_item(val, sizeof(val));
 
       if (! (n >= 0) && (n <= 9)) {
         break;
       }
-      if (val.len > 3) {
-        break;
-      }
-      val.s[val.len] = '\0';
-      i = atoi(val.s);
+      i = atoi(val);
 
-      switch (key.s[2]) {
+      switch (key[2]) {
         case 'r':
           p = 0;
           break;
@@ -164,16 +213,87 @@ main(int argc, char *argv[])
           break;
         default:
           p = 3;
+          i = (val[0] != '\0');
           break;
       }
 
       sensor[n][p] = i;
+    } else {
+      int i;
+
+      for (i = 0; entries[i].name; i += 1) {
+        if (0 == strcmp(key, entries[i].name)) {
+          len = copy_item(key, entries[i].size);
+          break;
+        }
+      }
     }
-    write(1, key.s, key.len);
-    write(1, "=", 1);
-    write(1, val.s, val.len);
-    write(1, "\n", 1);
   }
+
+  /* Sanitize token */
+  {
+    char *p = token;
+
+    while (*p) {
+      if (! isalnum(*p)) {
+        *p = '_';
+      }
+      p += 1;
+    }
+
+    if ('\0' == token[0]) {
+      token[0] = '_';
+      token[1] = '\0';
+    }
+  }
+
+  /* Move files into their directory */
+  {
+    char        path[132];
+    char        dest[132];
+    struct stat st;
+    int         i;
+
+    snprintf(path, sizeof(path), BASE_PATH "%s/", token);
+    if (-1 == stat(path, &st)) return croak("Invalid token");
+    if (! S_ISDIR(st.st_mode)) return croak("Invalid token");
+    for (i = 0; entries[i].name; i += 1) {
+      snprintf(path, sizeof(path),
+               BASE_PATH "%05d.%s",
+               getpid(), entries[i].name);
+      snprintf(dest, sizeof(dest),
+               BASE_PATH "%s/%s",
+               token, entries[i].name);
+      rename(path, dest);
+    }
+
+    for (i = 0; i < 10; i += 1) {
+      FILE *f;
+
+      snprintf(dest, sizeof(dest),
+               BASE_PATH "%s/sensor%d",
+               token, i);
+      f = fopen(dest, "w");
+      if (! f) break;
+
+      fprintf(f, "%d %d %d %d\n",
+              sensor[i][0],
+              sensor[i][1],
+              sensor[i][2],
+              sensor[i][3]);
+      fclose(f);
+    }
+  }
+
+  printf("Content-type: text/html\n\n");
+  printf("<!DOCTYPE html>\n");
+  printf("<html><head>\n");
+  printf("<link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">\n");
+  printf("<title>Tank submitted</title>\n");
+  printf("</head><body><h1>Tank submitted</h1>\n");
+  printf("<p>You just uploaded a tank!</p>\n");
+  printf("<p>Let's hope it doesn't suck.</p>\n");
+  printf("</body></html>\n");
 
   return 0;
 }

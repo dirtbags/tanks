@@ -17,8 +17,6 @@ body {
 h1:first-child {
     text-transform: lowercase;
     font-size: 1.6em;
-/*     background-color: #222; */
-/*     opacity: 0.9; */
     padding: 3px;
     color: #2a2;
     margin: 0 0 1em 70px;
@@ -116,15 +114,6 @@ pre {
     padding: 0.25em;
 }
 
-
-th {
-    vertical-align: top;
-    text-align: center;
-}
-td {
-    vertical-align: top;
-    text-align: right;
-}
 
 p {
     line-height: 1.4em;

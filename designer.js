@@ -18,7 +18,7 @@ function update() {
     var color = document.getElementsByName('color')[0].value;
     var sensors = new Array();
 
-    for (i = 0; i < 4; i += 1) {
+    for (i = 0; i < 10; i += 1) {
         var range = document.getElementsByName('s'+i+'r')[0].value;
         var angle = document.getElementsByName('s'+i+'a')[0].value;
         var width = document.getElementsByName('s'+i+'w')[0].value;

@@ -27,10 +27,20 @@
   <body>
     <h1>Tank Designer</h1>
     <div id="preview"><canvas id="design"></canvas><p id="debug"></p></div>
-    <form>
+
+    <p>
+      Before you can get going with a tank, you need a token.  If you
+      need a token, just ask one of the dirtbags.
+    </p>
+
+    <form action="designer.cgi" method="post">
       <fieldset id="metadata">
         <legend>Information</legend>
         <table>
+          <tr>
+            <td>Token:</td>
+            <td><input name="token"></td>
+          </tr>
           <tr>
             <td>Tank name:</td>
             <td><input name="name"></td>

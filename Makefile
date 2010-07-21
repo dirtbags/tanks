@@ -15,6 +15,7 @@ forf.html: forf.html.sh forf/forf.txt
 
 forf.%: forf/forf.%
 	cp forf/$@ $@
+.PRECIOUS: forf/%
 forf/%:
 	git submodule update --init
 

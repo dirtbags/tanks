@@ -12,7 +12,7 @@ BEGIN {
     print "<html>";
     print "  <head>";
     print "    <title>Dirtbags Tanks</title>";
-    print "    <link rel=\"stylesheet\" href=\"tanks.css\" type=\"text/css\">";
+    print "    <link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">";
     print "  </head>";
     print "  <body>";
     print "    <h1>Dirtbags Tanks</h1>";
@@ -27,7 +27,9 @@ BEGIN {
 
     print "    <h2>Rankings</h2>";
     print "    <ol>";
-    while ("ls -d players/*" | getline id) {
+    for (i = 1; i < ARGC; i += 1) {
+        id = ARGV[i];
+
         if (1 == getline < (id "/name")) {
             names[id] = esc($0);
         } else {
