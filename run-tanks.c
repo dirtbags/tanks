@@ -353,7 +353,7 @@ print_header(FILE              *f,
 {
   int i, j;
 
-  fprintf(f, "[[%d, %d, %d],[\n",
+  fprintf(f, "[[%d,%d,%d],[\n",
          (int)game->size[0], (int)game->size[1], TANK_CANNON_RANGE);
   for (i = 0; i < ntanks; i += 1) {
     fprintf(f, " [\"%s\",[", forftanks[i].color);
@@ -361,13 +361,14 @@ print_header(FILE              *f,
       struct sensor *s = &(tanks[i].sensors[j]);
 
       if (! s->range) {
-        continue;
+        fprintf(f, "0,");
+      } else {
+        fprintf(f, "[%d,%.2f,%.2f,%d],",
+                (int)(s->range),
+                s->angle,
+                s->width,
+                s->turret);
       }
-      fprintf(f, "[%d, %.2f, %.2f, %d],",
-             (int)(s->range),
-             s->angle,
-             s->width,
-             s->turret);
     }
     fprintf(f, "]],\n");
   }
@@ -535,6 +536,7 @@ main(int argc, char *argv[])
       mytanks[i].position[1] = (float)y;
       mytanks[i].angle = deg2rad(rand() % 360);
       mytanks[i].turret.current = deg2rad(rand() % 360);
+      mytanks[i].turret.desired = mytanks[i].turret.current;
 
       x += SPACING;
       if (x > game.size[0]) {

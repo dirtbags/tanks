@@ -131,7 +131,7 @@ tanks_fire_cannon(struct tanks_game *game,
   rpos[0] = vector[0];
   rpos[1] = vector[1];
   rotate_point(-theta, rpos);
-  if (fabsf(rpos[1]) < TANK_RADIUS) {
+  if ((rpos[0] > 0) && (fabsf(rpos[1]) < TANK_RADIUS)) {
     that->killer = this;
     that->cause_death = "shot";
   }
@@ -204,7 +204,7 @@ tanks_sensor_calc(struct tanks_game *game,
     /* Now check if the edge of the arc intersects the tank.  Do this
        just like with firing. */
     rotate_point(this->sensors[i].width / -2, rpos);
-    if (fabsf(rpos[1]) < TANK_RADIUS) {
+    if ((rpos[0] > 0) && (fabsf(rpos[1]) < TANK_RADIUS)) {
       this->sensors[i].triggered = 1;
     }
   }

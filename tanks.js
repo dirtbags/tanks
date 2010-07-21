@@ -26,14 +26,19 @@ function Tank(ctx, width, height, color, sensors) {
     this.sensors = new Array();
     for (i in sensors) {
         var s = sensors[i];
-        // r, angle, width, turret
-        this.sensors[i] = new Array();
-        this.sensors[i][0] = s[0];
-        this.sensors[i][1] = s[1] - s[2]/2;
-        this.sensors[i][2] = s[1] + s[2]/2;
-        this.sensors[i][3] = s[3]?1:0;
-        if (s[0] > maxlen) {
-            maxlen = s[0];
+
+        if (! s) {
+            this.sensors[i] = [0,0,0,0];
+        } else {
+            // r, angle, width, turret
+            this.sensors[i] = new Array();
+            this.sensors[i][0] = s[0];
+            this.sensors[i][1] = s[1] - s[2]/2;
+            this.sensors[i][2] = s[1] + s[2]/2;
+            this.sensors[i][3] = s[3]?1:0;
+            if (s[0] > maxlen) {
+                maxlen = s[0];
+            }
         }
     }
 

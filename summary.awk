@@ -55,8 +55,8 @@ BEGIN {
         # Find highest score
         maxscore = -1;
         for (p in scores) {
-            if (p > maxscore) {
-                maxscore = p;
+            if (int(p) > maxscore) {
+                maxscore = int(p);
             }
         }
         if (maxscore == -1) {
