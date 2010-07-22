@@ -421,12 +421,12 @@ print_rounds(FILE *f,
           flags |= 2;
         }
         fprintf(f, " [%d,%d,%.2f,%.2f,%d,%d],\n",
-               (int)(t->position[0]),
-               (int)(t->position[1]),
-               t->angle,
-               t->turret.current,
-               flags,
-               sensors);
+                (int)t->position[0],
+                (int)(t->position[1]),
+                t->angle,
+                t->turret.current,
+                flags,
+                sensors);
       }
     }
     fprintf(f, "],\n");

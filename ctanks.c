@@ -305,9 +305,15 @@ tanks_move_tank(struct tanks_game *game,
     v[1] = tank->speed.current[1] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
 
     /* Outside and inside speeds */
-    So = max(v[0], v[1]);
-    Si = min(v[0], v[1]);
-    dir = (v[0] > v[1]) ? 1 : -1;
+    if (fabsf(v[0]) > abs(v[1])) {
+      Si = v[1];
+      So = v[0];
+      dir = 1;
+    } else {
+      Si = v[0];
+      So = v[1];
+      dir = -1;
+    }
 
     /* Radius of circle to outside tread (use similar triangles) */
     r = So * (TANK_RADIUS * 2) / (So - Si);
