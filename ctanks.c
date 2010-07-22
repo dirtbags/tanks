@@ -14,7 +14,7 @@
 #define DUMP_f(v) DUMPf("%s = %f", #v, v)
 #define DUMP_p(v) DUMPf("%s = %p", #v, v)
 #define DUMP_xy(v) DUMPf("%s = (%f, %f)", #v, v[0], v[1]);
-#define DUMP_angle(v) DUMPf("%s = %.3fπ", #v, (v/PI));
+#define DUMP_angle(v) DUMPf("%s = %.3fτ", #v, (v/TAU));
 
 #define sq(x) ((x) * (x))
 
@@ -55,7 +55,7 @@ tank_get_turret(struct tank *tank)
 void
 tank_set_turret(struct tank *tank, float angle)
 {
-  tank->turret.desired = fmodf(angle, 2*PI);
+  tank->turret.desired = fmodf(angle, TAU);
 }
 
 int
@@ -253,13 +253,13 @@ tanks_move_tank(struct tanks_game *game,
     /* Constrain rot_angle to between -PI and PI */
     rot_angle = tank->turret.desired - tank->turret.current;
     while (rot_angle < 0) {
-      rot_angle += 2*PI;
+      rot_angle += TAU;
     }
-    rot_angle = fmodf(PI + rot_angle, 2*PI) - PI;
+    rot_angle = fmodf(PI + rot_angle, TAU) - PI;
 
     rot_angle = min(TANK_MAX_TURRET_ROT, rot_angle);
     rot_angle = max(-TANK_MAX_TURRET_ROT, rot_angle);
-    tank->turret.current = fmodf(tank->turret.current + rot_angle, 2*PI);
+    tank->turret.current = fmodf(tank->turret.current + rot_angle, TAU);
   }
 
   /* Fakey acceleration */
@@ -322,9 +322,9 @@ tanks_move_tank(struct tanks_game *game,
 
        The fraction of the circle traveled is equal to the speed
        of the outer tread over the circumference of the circle:
-           Ft = So/(2*pi*r)
+           Ft = So/(tau*r)
        The angle traveled is:
-           theta = Ft * 2*pi
+           theta = Ft * tau
        This reduces to a simple
            theta = So/r
        We multiply it by dir to adjust for the direction of rotation
@@ -336,7 +336,7 @@ tanks_move_tank(struct tanks_game *game,
   }
 
   /* Now move the tank */
-  tank->angle = fmodf(tank->angle + angle + 2*PI, 2*PI);
+  tank->angle = fmodf(tank->angle + angle + TAU, TAU);
   {
     float m[2];
 

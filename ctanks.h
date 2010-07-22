@@ -2,7 +2,8 @@
 #define __CTANKS_H__
 
 /* Some useful constants */
-#define PI 3.14159265358979323846
+#define TAU 6.28318530717958647692
+#define PI  3.14159265358979323846
 
 #define TANK_MAX_SENSORS     10
 #define TANK_RADIUS          7.5
@@ -10,7 +11,7 @@
 #define TANK_CANNON_RECHARGE 20 /* Turns to recharge cannon */
 #define TANK_CANNON_RANGE    (TANK_SENSOR_RANGE / 2)
 #define TANK_MAX_ACCEL       35
-#define TANK_MAX_TURRET_ROT  (PI/10)
+#define TANK_MAX_TURRET_ROT  (TAU/20)
 #define TANK_TOP_SPEED       7
 
 /* (tank radius + tank radius)^2 */
@@ -27,8 +28,8 @@
   ((TANK_CANNON_RANGE + TANK_RADIUS) * (TANK_CANNON_RANGE + TANK_RADIUS))
 
 #ifndef rad2deg
-#define rad2deg(r) ((int)(180*(r)/PI))
-#define deg2rad(r) ((r*PI)/180)
+#define rad2deg(r) ((int)(360*(r)/TAU))
+#define deg2rad(r) ((r*TAU)/360)
 #endif
 
 #ifndef max
