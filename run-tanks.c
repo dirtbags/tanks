@@ -353,8 +353,8 @@ print_header(FILE              *f,
 {
   int i, j;
 
-  fprintf(f, "[[%d,%d,%d],[\n",
-         (int)game->size[0], (int)game->size[1], TANK_CANNON_RANGE);
+  fprintf(f, "[[%d,%d],[\n",
+         (int)game->size[0], (int)game->size[1]);
   for (i = 0; i < ntanks; i += 1) {
     fprintf(f, " [\"%s\",[", forftanks[i].color);
     for (j = 0; j < TANK_MAX_SENSORS; j += 1) {

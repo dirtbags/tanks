@@ -1,7 +1,9 @@
+BINARIES = run-tanks designer.cgi
+HTML = forf.html procs.html intro.html designer.html
+
 CFLAGS = -Wall
 
-all: html run-tanks designer.cgi
-html: forf.html procs.html intro.html
+all: $(BINARIES) $(HTML)
 
 run-tanks: run-tanks.o ctanks.o forf.o
 run-tanks: LDFLAGS = -lm
@@ -22,5 +24,5 @@ forf/%:
 	git submodule update --init
 
 clean:
-	rm -f run-tanks designer.cgi *.o forf.c forf.h
-	rm -f next-round round-*.html summary.html forf.html
+	rm -f *.o forf.c forf.h next-round round-*.html
+	rm -f $(BINARIES) $(HTML)
