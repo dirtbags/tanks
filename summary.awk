@@ -8,6 +8,8 @@ function esc(s) {
 }
 
 BEGIN {
+    ngames = 20;
+
     print "<!DOCTYPE html>";
     print "<html>";
     print "  <head>";
@@ -17,15 +19,9 @@ BEGIN {
     print "  <body>";
     print "    <h1>Dirtbags Tanks</h1>";
 
-    print "    <h2>Resources</h2>";
-    print "    <ul>";
-    print "      <li><a href=\"intro.html\">Introduction</a></li>";
-    print "      <li><a href=\"forf.html\">Forf manual</a></li>";
-    print "      <li><a href=\"procs.html\">Tanks procedures</a></li>";
-    print "      <li><a href=\"designer.html\">Tanks designer</a></li>";
-    print "    </ul>";
-
+    print "    <p>New here?  Read the <a href=\"intro.html\">introduction</a>.</p>";
     print "    <h2>Rankings</h2>";
+    print "    <p>Over the last 20 games only.</p>";
     print "    <ol>";
     for (i = 1; i < ARGC; i += 1) {
         id = ARGV[i];
@@ -43,13 +39,16 @@ BEGIN {
             color[id] = "#c0c0c0";
         }
 
-        p = 0;
-        while (1 == getline < (id "/points")) {
-            p += $0;
+
+        for (j = 0; 1 == getline < (id "/points"); j += 1) {
+            pts[id, j % ngames] = int($0);
         }
-        scores[p] = p;
-        points[id] = p;
-        nscores
+        total = 0;
+        for (j = 0; j < ngames; j += 1) {
+            total += pts[id, j];
+        }
+        scores[total] = total;
+        points[id] = total;
     }
     while (1) {
         # Find highest score
@@ -66,7 +65,7 @@ BEGIN {
 
         for (id in points) {
             if (points[id] == maxscore) {
-                printf("<li><span class=\"swatch\" style=\"background-color: %s;\">#</span> %s (%d wins)</li>\n", color[id], names[id], points[id]);
+                printf("<li><span class=\"swatch\" style=\"background-color: %s;\">#</span> %s (%d points)</li>\n", color[id], names[id], points[id]);
             }
         }
     }
@@ -79,6 +78,11 @@ BEGIN {
         printf("<li><a href=\"round-%04d.html\">%04d</a></li>\n", i, i);
     }
     print "    </ul>";
+
+    while (getline < "nav.html.inc") {
+        print;
+    }
+
     print "  </body>";
     print "</html>";
 }

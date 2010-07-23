@@ -66,6 +66,8 @@
       <dd>Returns a random number in the range [0, n).  That is, between
         0 and n-1, inclusive.</dd>
     </dl>
+
+include(nav.html.inc)
   </body>
 </html>
 

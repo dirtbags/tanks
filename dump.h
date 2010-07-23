@@ -2,6 +2,10 @@
 
 #include <stdio.h>
 
+#ifndef TAU
+#define TAU 6.28318530717958647692
+#endif
+
 /* Debugging */
 #define DUMPf(fmt, args...) fprintf(stderr, "%s:%s:%d " fmt "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
 #define DUMP() DUMPf("")
@@ -12,6 +16,7 @@
 #define DUMP_f(v) DUMPf("%s = %f", #v, v)
 #define DUMP_p(v) DUMPf("%s = %p", #v, v)
 #define DUMP_xy(v) DUMPf("%s = (%f, %f)", #v, v[0], v[1]);
+#define DUMP_angle(v) DUMPf("%s = %.3fτ", #v, (v/TAU));
 
 /* Tektronix 4014 drawing */
 #define TEK_ENABLE "\033[?38h"

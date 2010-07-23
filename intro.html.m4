@@ -143,4 +143,5 @@ get-turret 12 + set-turret!         ( Rotate turret )
     </dl>
 
     Good luck blowing everybody up!
+include(nav.html.inc)
 </html>

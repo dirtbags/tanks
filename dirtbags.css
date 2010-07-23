@@ -30,7 +30,7 @@ h1:first-child:before {
 
 /*** left side bar ***/
 
-#navigation {
+nav {
   position: absolute;
   background: #222;
   opacity: 0.9;
@@ -39,18 +39,18 @@ h1:first-child:before {
   padding: 0;
 }
 
-#navigation h3 {
+nav h2 {
   font-size: 100%;
   border-bottom: 2px solid #444;
 }
 
-#navigation ul {
+nav ul {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-#navigation li a {
+nav li a {
   display: block;
   height: 25px;
   width: 90px;
@@ -63,13 +63,13 @@ h1:first-child:before {
   font-size: 0.9em;
 }
 
-#navigation li a:hover {
+nav li a:hover {
   color: #f4f4f4;
   background: #333;
   border-right: 4px solid #2a2;
 }
 
-#navigation li .active {
+nav li .active {
   color: #999;
   background: #333;
   border-right: 4px solid #444;

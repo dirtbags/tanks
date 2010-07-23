@@ -1,6 +1,4 @@
-#! /bin/sh
-
-cat <<EOF
+<!DOCTYPE html>
 <html>
   <head>
     <title>Forf Manual</title>
@@ -8,9 +6,8 @@ cat <<EOF
     <link rel="stylesheet" href="dirtbags.css" type="text/css">
   </head>
   <body>
-EOF
-markdown forf/forf.txt
-cat <<EOF
+syscmd(markdown forf/forf.txt)
+include(nav.html.inc)
   </body>
 </html>
-EOF
+

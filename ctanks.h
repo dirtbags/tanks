@@ -1,10 +1,11 @@
 #ifndef __CTANKS_H__
 #define __CTANKS_H__
 
-/* Some useful constants */
+/* τ = 2π */
 #define TAU 6.28318530717958647692
 #define PI  3.14159265358979323846
 
+/* Some in-game constants */
 #define TANK_MAX_SENSORS     10
 #define TANK_RADIUS          7.5
 #define TANK_SENSOR_RANGE    100

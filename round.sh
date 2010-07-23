@@ -41,11 +41,13 @@ window.onload = go;
     </script>
   </head>
   <body>
+    <h1>Tanks Round $next</h1>
     <div id="game_box"><canvas id="battlefield"></canvas></div>
     <p><span id="fps">0</span> fps</p>
 EOF
 ./rank.awk $rfn >>$fn
 rm -f $rfn
+cat nav.html.inc >>$fn
 cat <<EOF >>$fn
   </body>
 </html>

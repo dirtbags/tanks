@@ -65,10 +65,10 @@ END {
         if (killer[id]) {
             reason[id] = reason[id] " (" name[killer[id]] ")";
         }
+        print score[id] >> (path[id] "/points");
     }
 
-    # Give the winner a point
-    print "1" >> (path[winner] "/points");
+    # Dole out points
 
     # Output the table
     print "<table id=\"results\">";
