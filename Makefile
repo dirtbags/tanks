@@ -15,6 +15,7 @@ install:
 	install designer.cgi $(DESTDIR)/usr/lib/tanks
 	install $(HTML) $(DESTDIR)/usr/lib/tanks
 	install $(WWW) $(DESTDIR)/usr/lib/tanks
+	cp -r examples $(DESTDIR)/usr/lib/tanks/examples
 
 forftanks: forftanks.o ctanks.o forf.o
 forftanks: LDFLAGS = -lm
