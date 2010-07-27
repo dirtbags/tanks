@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <ctype.h>
 
-#define BASE_PATH "/tmp/tanks/"
+char *BASE_PATH = "";
 
 struct {
   char   *name;
@@ -96,7 +96,7 @@ copy_item(char *filename, size_t maxlen)
   size_t  pos = 0;
 
   snprintf(path, sizeof(path),
-           BASE_PATH "%05d.%s",
+           "%s%05d.%s", BASE_PATH,
            getpid(), filename);
   f = fopen(path, "w");
   if (! f) {
@@ -134,7 +134,7 @@ croak(char *msg)
 
   for (i = 0; entries[i].name; i += 1) {
     snprintf(path, sizeof(path),
-             BASE_PATH "%05d.%s",
+             "%s%05d.%s", BASE_PATH
              getpid(), entries[i].name);
     unlink(path);
   }
@@ -166,6 +166,11 @@ main(int argc, char *argv[])
 
   memset(sensor, 0, sizeof(sensor));
   token[0] = '\0';
+
+  BASE_PATH = getenv("BASE_PATH");
+  if (! BASE_PATH) {
+    BASE_PATH = "";
+  }
 
   {
     char *rm = getenv("REQUEST_METHOD");
@@ -254,15 +259,15 @@ main(int argc, char *argv[])
     struct stat st;
     int         i;
 
-    snprintf(path, sizeof(path), BASE_PATH "%s/", token);
+    snprintf(path, sizeof(path), "%s%s/", BASE_PATH, token);
     if (-1 == stat(path, &st)) return croak("Invalid token");
     if (! S_ISDIR(st.st_mode)) return croak("Invalid token");
     for (i = 0; entries[i].name; i += 1) {
       snprintf(path, sizeof(path),
-               BASE_PATH "%05d.%s",
+               "%s%05d.%s", BASE_PATH,
                getpid(), entries[i].name);
       snprintf(dest, sizeof(dest),
-               BASE_PATH "%s/%s",
+               "%s%s/%s", BASE_PATH,
                token, entries[i].name);
       rename(path, dest);
     }
@@ -271,7 +276,7 @@ main(int argc, char *argv[])
       FILE *f;
 
       snprintf(dest, sizeof(dest),
-               BASE_PATH "%s/sensor%d",
+               "%s%s/sensor%d", BASE_PATH,
                token, i);
       f = fopen(dest, "w");
       if (! f) break;

@@ -1,14 +1,14 @@
-BINARIES = run-tanks designer.cgi
+BINARIES = forftanks designer.cgi
 HTML = forf.html procs.html intro.html designer.html
 
 CFLAGS = -Wall
 
 all: $(BINARIES) $(HTML)
 
-run-tanks: run-tanks.o ctanks.o forf.o
-run-tanks: LDFLAGS = -lm
+forftanks: forftanks.o ctanks.o forf.o
+forftanks: LDFLAGS = -lm
 
-run-tanks.o: forf.h ctanks.h
+forftanks.o: forf.h ctanks.h
 forf.o: forf.c forf.h
 ctanks.o: ctanks.h
 
