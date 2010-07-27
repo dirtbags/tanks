@@ -1,9 +1,20 @@
 BINARIES = forftanks designer.cgi
 HTML = forf.html procs.html intro.html designer.html
+WWW = dirtbags.css grunge.png designer.js figures.js tanks.js nav.html.inc
 
 CFLAGS = -Wall
 
 all: $(BINARIES) $(HTML)
+
+install:
+	install -d $(DESTDIR)/usr/bin
+	install run-tanks $(DESTDIR)/usr/bin
+	install forftanks $(DESTDIR)/usr/bin
+
+	install -d $(DESTDIR)/usr/lib/ctanks
+	install designer.cgi $(DESTDIR)/usr/lib/ctanks
+	install $(HTML) $(DESTDIR)/usr/lib/ctanks
+	install $(WWW) $(DESTDIR)/usr/lib/ctanks
 
 forftanks: forftanks.o ctanks.o forf.o
 forftanks: LDFLAGS = -lm
