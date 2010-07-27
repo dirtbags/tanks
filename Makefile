@@ -11,10 +11,10 @@ install:
 	install run-tanks $(DESTDIR)/usr/bin
 	install forftanks $(DESTDIR)/usr/bin
 
-	install -d $(DESTDIR)/usr/lib/ctanks
-	install designer.cgi $(DESTDIR)/usr/lib/ctanks
-	install $(HTML) $(DESTDIR)/usr/lib/ctanks
-	install $(WWW) $(DESTDIR)/usr/lib/ctanks
+	install -d $(DESTDIR)/usr/lib/tanks
+	install designer.cgi $(DESTDIR)/usr/lib/tanks
+	install $(HTML) $(DESTDIR)/usr/lib/tanks
+	install $(WWW) $(DESTDIR)/usr/lib/tanks
 
 forftanks: forftanks.o ctanks.o forf.o
 forftanks: LDFLAGS = -lm
