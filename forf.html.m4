@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="dirtbags.css" type="text/css">
   </head>
   <body>
-syscmd(markdown forf/forf.txt)
+syscmd(markdown forf.txt)
 include(nav.html.inc)
   </body>
 </html>
