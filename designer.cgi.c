@@ -134,7 +134,7 @@ croak(char *msg)
 
   for (i = 0; entries[i].name; i += 1) {
     snprintf(path, sizeof(path),
-             "%s%05d.%s", BASE_PATH
+             "%s%05d.%s", BASE_PATH,
              getpid(), entries[i].name);
     unlink(path);
   }
