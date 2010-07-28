@@ -116,6 +116,7 @@ BEGIN {
     print "    <h1>Dirtbags Tanks</h1>";
 
     print "    <p>New here?  Read the <a href=\"intro.html\">introduction</a>.</p>";
+    print "    <p>New round every minute.</p>";
     print "    <h2>Rankings</h2>";
     print "    <p>Over the last 20 games only.</p>";
     print "    <ol>";
