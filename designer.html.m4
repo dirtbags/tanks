@@ -76,8 +76,8 @@ define(sensor,
             <tr>
               <td>$1</td>
               <td><input name="s$1r" type="number" min="0" max="100" onchange="update();"></td>
-              <td><input name="s$1a" type="number" min="0" max="360" onchange="update();"></td>
-              <td><input name="s$1w" type="number" min="0" max="360" onchange="update();"></td>
+              <td><input name="s$1a" type="number" min="-360" max="360" onchange="update();"></td>
+              <td><input name="s$1w" type="number" min="-360" max="360" onchange="update();"></td>
               <td><input name="s$1t" type="checkbox" onchange="update();"></td>
             </tr>
 sensor(incr($1))')')
