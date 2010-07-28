@@ -38,8 +38,8 @@
         <legend>Information</legend>
         <table>
           <tr>
-            <td>Token:</td>
-            <td><input name="token"></td>
+            <td>Password:</td>
+            <td><input name="token" type="password"></td>
           </tr>
           <tr>
             <td>Tank name:</td>

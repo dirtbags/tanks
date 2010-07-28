@@ -7,7 +7,7 @@ else
     exit 1
 fi
 
-TANKS_GAME=${TANKS_GAME:-./forftanks}
+TANKS_GAME=${TANKS_GAME:-forftanks}
 NAV_HTML_INC=${NAV_HTML_INC:-./nav.html.inc} export NAV_HTML_INC
 
 rank () {
