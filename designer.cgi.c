@@ -141,7 +141,7 @@ croak(char *msg)
 
   printf("Content-type: text/html\n\n");
   printf("<html><head>\n");
-  printf("<link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">\n");
+  printf("<link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\">\n");
   printf("<title>Tank submission error</title>\n");
   printf("</head><body><h1>Tank submission error</h1>\n");
   if (msg) {
@@ -293,7 +293,7 @@ main(int argc, char *argv[])
   printf("Content-type: text/html\n\n");
   printf("<!DOCTYPE html>\n");
   printf("<html><head>\n");
-  printf("<link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">\n");
+  printf("<link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\">\n");
   printf("<title>Tank submitted</title>\n");
   printf("</head><body><h1>Tank submitted</h1>\n");
   printf("<p>You just uploaded a tank!</p>\n");
