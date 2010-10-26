@@ -5,7 +5,7 @@ BEGIN {
 }
 
 {
-    tanks[$1] = $1;
+    tanks[$1] = $2;
     if ($4 == "(nil)") {
         p = $1;
     } else {
@@ -20,7 +20,7 @@ BEGIN {
 END {
     for (id in tanks) {
         if (score[id] == topscore) {
-            print id;
+            print tanks[id];
         }
     }
 }
