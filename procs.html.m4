@@ -3,7 +3,7 @@
   <head>
     <title>Tanks Procedure Reference</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="dirtbags.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
   </head>
   <body>
     <h1>Tanks Procedure Reference</h1>

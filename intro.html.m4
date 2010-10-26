@@ -3,7 +3,7 @@
   <head>
     <title>Tanks Introduction</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="dirtbags.css" type="text/css">
+    <link rel="stylesheet" href="style.css" type="text/css">
     <script type="application/javascript" src="tanks.js"></script>
     <script type="application/javascript" src="figures.js"></script>
   </head>
