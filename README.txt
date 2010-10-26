@@ -25,7 +25,7 @@ summary.html with summary.awk.  This is the main interface that you want
 to run from cron or whatever.
       
 
-### run-tanks tank1 tank2 ...
+### forftanks tank1 tank2 ...
 
 A program to run a round of tanks and output a JSON description of the
 game.  This is what tanks.js uses to render a game graphically.
@@ -48,7 +48,7 @@ the round to fd3.
 
 ### rank.awk
 
-Processes the fd3 output of run-tanks to award points and output an
+Processes the fd3 output of forftanks to award points and output an
 HTML results table.
 
 

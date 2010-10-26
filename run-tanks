@@ -4,193 +4,15 @@ if [ "$#" -gt 0 ]; then
     tanks="$@"
 else
     echo "Usage: $0 tank1 tank2 [...]"
+    echo "Writes ./next-round and ./summary.html"
     exit 1
 fi
 
 TANKS_GAME=${TANKS_GAME:-forftanks}
 NAV_HTML_INC=${NAV_HTML_INC:-./nav.html.inc} export NAV_HTML_INC
 
-rank () {
-    awk 'BEGIN {
-    FS = "\t";
-}
-
-function esc(s) {
-    gsub(/&/, "&amp;", s);
-    gsub(/</, "&lt;", s);
-    gsub(/>/, "&gt;", s);
-    return s;
-}
-
-{
-    id = $1;
-    ntanks += 1;
-    tanks[id] = id;
-    if ($4 == "(nil)") {
-        score[id] += 1;
-    } else {
-        reason[id] = $3;
-        killer[id] = $4;
-        kills[$4] += 1;
-        score[$4] += 1;
-    }
-    path[id] = $2;
-    if ($5) {
-        lasterr[id] = $6 " around char " $5;
-    } else {
-        lasterr[id] = $6;
-    }
-
-    if (1 == getline < (path[id] "/name")) {
-        name[id] = esc($0);
-    } else {
-        name[id] = "<i>Unnamed</i>";
-    }
-
-    getline < (path[id] "/color");
-    if (/^#[0-9A-Fa-f]+$/) {
-        color[id] = $0;
-    } else {
-        color[id] = "#c0c0c0";
-    }
-}
-
-END {
-    # Fill in who killed whom
-    for (id in tanks) {
-        if (score[id] > topscore) {
-            winner = id;
-            topscore = score[id];
-        }
-        if (killer[id]) {
-            reason[id] = reason[id] " (" name[killer[id]] ")";
-        }
-        print score[id] >> (path[id] "/points");
-    }
-
-    # Dole out points
-
-    # Output the table
-    print "<table id=\"results\">";
-    print "<tr><th>Name</th><th>Score</th><th>Cause of Death</th><th>Last Error</th></tr>";
-    for (i = ntanks; i >= 0; i -= 1) {
-        for (me in tanks) {
-            if (score[me] == i) {
-                if (me == winner) {
-                    style = "style=\"font-weight: bold; background-color: #666666\"";
-                } else {
-                    style = "";
-                }
-                printf("<tr " style ">");
-                printf("<td><span class=\"swatch\" style=\"background-color: " color[me] "\">#</span> " name[me] "</td>");
-                printf("<td>" score[me] "</td>");
-                printf("<td>" reason[me] "</td>");
-                printf("<td>" lasterr[me] "</td>");
-                printf("</tr>\n");
-            }
-        }
-    }
-    print "</table>";
-}
-' "$@"
-}
-
-summary () {
-    awk 'function esc(s) {
-    gsub(/&/, "&amp;", s);
-    gsub(/</, "&lt;", s);
-    gsub(/>/, "&gt;", s);
-    return s;
-}
-
-BEGIN {
-    ngames = 20;
-
-    print "<!DOCTYPE html>";
-    print "<html>";
-    print "  <head>";
-    print "    <title>Dirtbags Tanks</title>";
-    print "    <link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">";
-    print "  </head>";
-    print "  <body>";
-    print "    <h1>Dirtbags Tanks</h1>";
-
-    print "    <p>New here?  Read the <a href=\"intro.html\">introduction</a>.</p>";
-    print "    <p>New round every minute.</p>";
-    print "    <h2>Rankings</h2>";
-    print "    <p>Over the last 20 games only.</p>";
-    print "    <ol>";
-    for (i = 1; i < ARGC; i += 1) {
-        id = ARGV[i];
-
-        if (1 == getline < (id "/name")) {
-            names[id] = esc($0);
-        } else {
-            names[id] = "<i>Unnamed</i>";
-        }
-
-        getline < (id "/color");
-        if (/^#[0-9A-Fa-f]+$/) {
-            color[id] = $0;
-        } else {
-            color[id] = "#c0c0c0";
-        }
-
-
-        for (j = 0; 1 == getline < (id "/points"); j += 1) {
-            pts[id, j % ngames] = int($0);
-        }
-        total = 0;
-        for (j = 0; j < ngames; j += 1) {
-            total += pts[id, j];
-        }
-        scores[total] = total;
-        points[id] = total;
-    }
-    while (1) {
-        # Find highest score
-        maxscore = -1;
-        for (p in scores) {
-            if (int(p) > maxscore) {
-                maxscore = int(p);
-            }
-        }
-        if (maxscore == -1) {
-            break;
-        }
-        delete scores[maxscore];
-
-        for (id in points) {
-            if (points[id] == maxscore) {
-                printf("<li><span class=\"swatch\" style=\"background-color: %s;\">#</span> %s (%d points)</li>\n", color[id], names[id], points[id]);
-            }
-        }
-    }
-    print "    </ol>";
-
-    print "    <h2>Rounds</h2>";
-    print "    <ul>";
-    getline rounds < "next-round";
-    for (i = rounds - 1; i >= 0; i -= 1) {
-        printf("<li><a href=\"round-%04d.html\">%04d</a></li>\n", i, i);
-    }
-    print "    </ul>";
-
-    while (getline < ENVIRON["NAV_HTML_INC"]) {
-        print;
-    }
-
-    print "  </body>";
-    print "</html>";
-}
-' "$@"
-}
-
-
-
-
-
-
+# Add wherever this lives to the search path
+PATH=$PATH:$(dirname $0)
 
 if [ -f next-round ]; then
     next=$(cat next-round)
@@ -229,7 +51,7 @@ window.onload = go;
     <div id="game_box"><canvas id="battlefield"></canvas></div>
     <p><span id="fps">0</span> fps</p>
 EOF
-rank $rfn >>$fn
+rank.awk $rfn >>$fn
 rm -f $rfn
 cat $NAV_HTML_INC >>$fn
 cat <<EOF >>$fn
@@ -237,7 +59,7 @@ cat <<EOF >>$fn
 </html>
 EOF
 
-summary $tanks > summary.html.$$
+summary.awk $tanks > summary.html.$$
 mv summary.html.$$ summary.html
 
 echo "done."
