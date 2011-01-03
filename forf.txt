@@ -73,6 +73,13 @@ The following will result in 58 on the top of the stack:
     5 8 < { 50 8 + } { 50 8 - } ifelse
 
 
+Comments
+--------
+
+Anything inside parenthesis is ignored by the forf interpreter. 
+
+
+
 Built-in Procedures
 ===================
 
