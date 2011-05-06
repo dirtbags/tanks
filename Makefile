@@ -1,6 +1,6 @@
 BINARIES = forftanks designer.cgi
 HTML = forf.html procs.html intro.html designer.html
-WWW = dirtbags.css grunge.png designer.js figures.js tanks.js nav.html.inc
+WWW = style.css grunge.png designer.js figures.js tanks.js nav.html.inc
 
 CFLAGS = -Wall
 
