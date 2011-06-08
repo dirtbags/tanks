@@ -54,6 +54,7 @@ END {
         if (killer[id]) {
             reason[id] = reason[id] " (" name[killer[id]] ")";
         }
+        print score[id] >> (path[id] "/points");
     }
 
     # Output the table
