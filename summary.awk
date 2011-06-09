@@ -14,7 +14,7 @@ BEGIN {
     print "<html>";
     print "  <head>";
     print "    <title>Dirtbags Tanks</title>";
-    print "    <link rel=\"stylesheet\" href=\"dirtbags.css\" type=\"text/css\">";
+    print "    <link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\">";
     print "  </head>";
     print "  <body>";
     print "    <h1>Dirtbags Tanks</h1>";
