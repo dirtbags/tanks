@@ -501,24 +501,12 @@ main(int argc, char *argv[])
     fprintf(stdout, "// SEED=%d\n", seed);
   }
 
-  /* Shuffle the order we read things in */
-  for (i = 0; i < MAX_TANKS; i += 1) {
-    order[i] = i;
-  }
-  for (i = 0; i < argc - 1; i += 1) {
-    int j = rand() % (argc - 1);
-    int n = order[j];
-
-    order[j] = order[i];
-    order[i] = n;
-  }
-
   /* Every argument is a tank directory */
-  for (i = 0; i < argc - 1; i += 1) {
+  for (i = 1; ntanks < MAX_TANKS && i < argc; i += 1) {
     if (ft_read_tank(&myftanks[ntanks],
                      &mytanks[ntanks],
                      lenv,
-                     argv[order[i] + 1])) {
+                     argv[i])) {
       ntanks += 1;
     }
   }
@@ -542,17 +530,29 @@ main(int argc, char *argv[])
     game.size[1] = y * SPACING;
   }
 
+  /* Shuffle the order we place things on the game board */
+  for (i = 0; i < ntanks; i += 1) {
+    order[i] = i;
+  }
+  for (i = 0; i < ntanks; i += 1) {
+    int j = rand() % ntanks;
+    int n = order[j];
+
+    order[j] = order[i];
+    order[i] = n;
+  }
+
   /* Position tanks */
   {
     int x = SPACING/2;
     int y = SPACING/2;
 
     for (i = 0; i < ntanks; i += 1) {
-      mytanks[i].position[0] = (float)x;
-      mytanks[i].position[1] = (float)y;
-      mytanks[i].angle = deg2rad(rand() % 360);
-      mytanks[i].turret.current = deg2rad(rand() % 360);
-      mytanks[i].turret.desired = mytanks[i].turret.current;
+      mytanks[order[i]].position[0] = (float)x;
+      mytanks[order[i]].position[1] = (float)y;
+      mytanks[order[i]].angle = deg2rad(rand() % 360);
+      mytanks[order[i]].turret.current = deg2rad(rand() % 360);
+      mytanks[order[i]].turret.desired = mytanks[order[i]].turret.current;
 
       x += SPACING;
       if (x > game.size[0]) {
