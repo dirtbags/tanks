@@ -586,8 +586,13 @@ forf_parse_stream(struct forf_env *env,
 
     /* Handle comments */
     if (comment) {
-      if (')' == c) {
-        comment = 0;
+      switch (c) {
+        case EOF:
+          env->error = forf_error_parse;
+          return pos;
+        case ')':
+          comment = 0;
+          break;
       }
       continue;
     }
