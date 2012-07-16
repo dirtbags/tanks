@@ -18,7 +18,7 @@ install:
 	cp -r examples $(DESTDIR)/usr/lib/tanks/examples
 
 forftanks: forftanks.o ctanks.o forf.o
-forftanks: LDFLAGS = -lm
+forftanks: LDLIBS = -lm
 
 forftanks.o: forf.h ctanks.h
 forf.o: forf.c forf.h
