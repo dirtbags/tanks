@@ -13,12 +13,12 @@ Forf was heavily influenced by the PostScript programming language.
 About Stacks
 ============
 
-Central to the operation of Forf is the notion of a stack, or queue.  A
-stack is a first-in-first-out (FIFO) list, like a stack of dishes.
-Items can be "pushed" onto the top of the stack, or "popped" off the top
-of the stack.  Items may only be pushed or popped, meaning the top stack
-element is the only element that can be accessed.  To get to the third
-item down in a stack, it is necessary to first pop two items off.
+Central to the operation of Forf is the notion of a stack.  A stack is a
+last-in-first-out (LIFO) list, like a stack of dishes.  Items can be
+"pushed" onto the top of the stack, or "popped" off the top of the stack. 
+Items may only be pushed or popped, meaning the top stack element is the
+only element that can be accessed.  To get to the third item down in a
+stack, it is necessary to first pop two items off.
 
 
 Data Types
@@ -51,7 +51,7 @@ procedures is evaluated, it pops zero or more elements off the data
 stack, does something with them, and then pushes zero or more elements
 back onto the stack.
 
-The "+" procudure, for instance, pops two values, adds them, and pushes
+The "+" procedure, for instance, pops two values, adds them, and pushes
 the result.  The following data stack:
 
     [bottom] 58 88 5 [top]
