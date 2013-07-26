@@ -172,6 +172,10 @@ void
 forf_proc_random(struct forf_env *env)
 {
   long max = forf_pop_num(env);
+  
+  if (max < 1) {
+  	forf_push_num(env, 0);
+  }
 
   forf_push_num(env, rand() % max);
 }
