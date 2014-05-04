@@ -52,7 +52,7 @@ END {
             topscore = score[id];
         }
         if (killer[id]) {
-            reason[id] = reason[id] " (" name[killer[id]] ")";
+            reason[id] = reason[id] " (<span style='color:" color[killer[id]] ";'>" name[killer[id]] "</span>)";
         }
 		# XXX: track points a different way
         # print score[id] >> (path[id] "/points");
