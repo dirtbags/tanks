@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+""" Here's an example tank, in RFC822ish format:
+
+From: Joe Cool <joe@cool.cc>
+Password: swordfish
+Tank-Name: Red Baron
+Color: #c7e148
+Sensor-0: 50 0 7 1
+Sensor-1: 30 0 90 0
+
+get-turret 12 + set-turret!         ( Rotate turret )
+37 40 set-speed!                    ( Go in circles )
+0 sensor? { fire! } if              ( Fire if turret sensor triggered )
+1 sensor? { -50 50 set-speed! } if  ( Turn if collision sensor triggered )
+"""
+
+import argparse
+import sys
+import email
+import requests
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Upload forf tanks.",
+                formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--infile', '-i', nargs='?', metavar='FILE',
+            help="filename containing tank program",
+            type=argparse.FileType('r'), default=sys.stdin)
+    parser.add_argument('--url', '-u', nargs='?', metavar='URL',
+            help="URL to submit your tank to",
+            default='http://woozle.org/tanks/designer.cgi')
+    return parser.parse_args()
+
+def read_tank(infile):
+    msg = email.message_from_file(infile)
+    headers = dict(msg.items())
+    return headers, msg.get_payload()
+
+def post_tank(headers, code, url='http://woozle.org/tanks/designer.cgi'):
+    request = {}
+    request['token'] = headers.get('Password', '')
+    request['name'] = headers.get('Tank-Name', '')
+    request['author'] = headers.get('From', '')
+    request['color'] = headers.get('Color', '#c0c0c0')
+    for sn in xrange(0, 10):
+        sensor = 'Sensor-{}'.format(sn)
+        if sensor in headers:
+            sr, sa, sw, st = headers[sensor].split()
+            request['s{}r'.format(sn)] = sr
+            request['s{}a'.format(sn)] = sa
+            request['s{}w'.format(sn)] = sw
+            request['s{}t'.format(sn)] = st
+    request['program'] = code
+    r = requests.post(url, data=request, headers={'Accept': 'text/plain'})
+    print(r.text)
+    r.raise_for_status()
+
+if __name__ == '__main__':
+    args = parse_args()
+    headers, code = read_tank(args.infile)
+    post_tank(headers, code, args.url)
