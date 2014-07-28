@@ -12,7 +12,7 @@
 #define TANK_CANNON_RECHARGE 20 /* Turns to recharge cannon */
 #define TANK_CANNON_RANGE    (TANK_SENSOR_RANGE / 2)
 #define TANK_MAX_ACCEL       35
-#define TANK_MAX_TURRET_ROT  (TAU/20)
+#define TANK_MAX_TURRET_ROT  (TAU/8)
 #define TANK_TOP_SPEED       7
 
 /* (tank radius + tank radius)^2 */

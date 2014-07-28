@@ -24,6 +24,11 @@ expr $next + 1 > next-round
 fn=$(printf "round-%04d.html" $next)
 rfn=results$$.txt
 
+# Clean up old games
+ofn=$(printf "round-%04d.html" $(expr $next - 20))
+echo "Removing $ofn"
+rm -f $ofn
+
 
 echo -n "Running round $next... "
 cat <<EOF >$fn

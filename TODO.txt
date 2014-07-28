@@ -1,0 +1,14 @@
+BUGS
+====
+
+* Fix "random" bug
+* Pull fuzzie tree
+
+
+Requests
+========
+
+* Keep 12 hours of runs (720 runs)
+* Merge devdsp fixes (https://github.com/devdsp/tanks/commits/master)
+* Fix leaderboard
+* Read sensors from "sensors" and not "sensor[0-9]"

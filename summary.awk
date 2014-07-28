@@ -75,7 +75,7 @@ BEGIN {
     print "    <h2>Rounds</h2>";
     print "    <ul>";
     getline rounds < "next-round";
-    for (i = rounds - 1; i >= 0; i -= 1) {
+    for (i = rounds - 1; i >= rounds - 21; i -= 1) {
         printf("<li><a href=\"round-%04d.html\">%04d</a></li>\n", i, i);
     }
     print "    </ul>";
