@@ -317,7 +317,7 @@ tanks_move_tank(struct tanks_game *game,
        to be a penalty for having the treads go in opposite directions.
        This probably plays hell with precisely-planned tanks, which I
        find very ha ha. */
-    friction = .75 * (fabsf(tank->speed.current[0] - tank->speed.current[1]) / 200);
+    friction = TANK_FRICTION * (fabsf(tank->speed.current[0] - tank->speed.current[1]) / 200);
     v[0] = tank->speed.current[0] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
     v[1] = tank->speed.current[1] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
 

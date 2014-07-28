@@ -25,7 +25,7 @@ fn=$(printf "round-%04d.html" $next)
 rfn=results$$.txt
 
 # Clean up old games
-ofn=$(printf "round-%04d.html" $(expr $next - 20))
+ofn=$(printf "round-%04d.html" $(expr $next - 720))
 echo "Removing $ofn"
 rm -f $ofn
 
@@ -64,8 +64,7 @@ cat <<EOF >>$fn
 </html>
 EOF
 
-summary.awk $tanks > summary.html.$$
-mv summary.html.$$ summary.html
+summary.awk $tanks > summary.html.$$ && mv summary.html.$$ summary.html
 
 echo "done."
 
