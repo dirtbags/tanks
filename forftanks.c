@@ -175,6 +175,7 @@ forf_proc_random(struct forf_env *env)
   
   if (max < 1) {
   	forf_push_num(env, 0);
+	return;
   }
 
   forf_push_num(env, rand() % max);
