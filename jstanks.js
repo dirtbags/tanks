@@ -687,8 +687,8 @@ var resetTanks = function() {
     tank.color = document.getElementsByName('color')[0].value;
     for (var i = 0; i < 10; i++) {
         var range = 1*document.getElementsByName('s'+i+'r')[0].value;
-        var angle = 1*document.getElementsByName('s'+i+'a')[0].value;
-        var width = 1*document.getElementsByName('s'+i+'w')[0].value;
+        var angle = (1*document.getElementsByName('s'+i+'a')[0].value) % 360;
+        var width = (1*document.getElementsByName('s'+i+'w')[0].value) % 360;
         var turret = 1*document.getElementsByName('s'+i+'t')[0].checked;
         if (range) {
             tank.addSensor(range, angle, width, turret);
