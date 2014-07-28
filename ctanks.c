@@ -116,13 +116,14 @@ tanks_fire_cannon(struct tanks_game *game,
   float theta = this->angle + this->turret.current;
   float rpos[2];
 
-  /* If someone's a crater, this is easy */
-  if (this->killer || that->killer) {
+  /* If someone's a crater, this is easy (unless we were just killed by the other one, in which case
+     we have to check the other direction) */
+  if ((this->killer && this->killer != that) || that->killer) {
     return;
   }
 
   /* Did they collide? */
-  if (dist2 < TANK_COLLISION_ADJ2) {
+  if ((!this->killer) && dist2 < TANK_COLLISION_ADJ2) {
     this->killer = that;
     this->cause_death = "collision";
 

@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "forf.h"
 #include "dump.h"
@@ -348,7 +349,7 @@ forf_proc_div(struct forf_env *env)
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
-  if (0 == a) {
+  if (0 == a || (a == -1 && b == LONG_MIN)) {
     env->error = forf_error_divzero;
     return;
   }
@@ -361,7 +362,7 @@ forf_proc_mod(struct forf_env *env)
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
-  if (0 == a) {
+  if (0 == a || (a == -1 && b == LONG_MIN)) {
     env->error = forf_error_divzero;
     return;
   }
