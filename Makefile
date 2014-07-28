@@ -1,4 +1,4 @@
-BINARIES = forftanks designer.cgi
+BINARIES = forftanks upload.cgi
 HTML = forf.html procs.html intro.html designer.html
 WWW = style.css grunge.png designer.js figures.js tanks.js nav.html.inc
 
