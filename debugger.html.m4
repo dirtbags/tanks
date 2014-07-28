@@ -33,18 +33,45 @@
       }
     </style>
     <script type="application/javascript" src="designer.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
     <script type="application/javascript">
-      window.onload = function() { design(); update(); }
+      window.onload = function() { design(); update(); };
+      function onSubmit() {
+        $('#submit-feedback').html("Submitting...");
+
+        // http://stackoverflow.com/questions/169506/obtain-form-input-fields-using-jquery
+        var values = {};
+        $.each($('#form').serializeArray(), function(i, field) {
+          values[field.name] = field.value;
+        });
+
+        var request = $.ajax({
+          accept: "text/plain",
+          url: "upload.cgi",
+          type: "POST",
+          dataType: "text",
+          data: values
+        });
+
+        request.done(function(msg) {
+          // TODO: red on error?
+          $('#submit-feedback').html(msg);
+        });
+        request.fail(function(jqXHR, status) {
+          // TODO: red on error?
+          $('#submit-feedback').html(jqXHR.responseText);
+        });
+      }
     </script>
   </head>
   <body style="background: #222; color: #bbb;">
     <h1>Tank Debugger</h1>
     <div id="game_box"><canvas id="battlefield" style="border: 2px solid green;" width="450" height="450"></canvas></div>
-    <form action="designer.cgi" method="post">
     <p>
       <input type="button" onclick="resetTanks();" value="Run"> (Remember to submit (below) when you're done!)
     </p>
     <p id="debug"></p>
+    <form id="form">
     <div id="stuff">
     <div id="code">
        <textarea id="program" name="program" rows="20" cols="80">get-turret 12 + set-turret!         ( Rotate turret )
@@ -53,7 +80,7 @@
 1 sensor? { -50 50 set-speed! } if  ( Turn if collision sensor triggered )
       </textarea><br>
       <fieldset id="submit">
-        <p><input type="submit" value="Submit"></p>
+        <p><input type="button" value="Submit" onclick="onSubmit();"> <span id="submit-feedback"> </span></p>
 
     <p>
       Before you can get going with a tank, you need a password.  If you
