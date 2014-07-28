@@ -53,7 +53,7 @@ var TANK_SENSOR_RANGE = 100;
 var TANK_CANNON_RECHARGE = 20; /* Turns to recharge cannon */
 var TANK_CANNON_RANGE = (TANK_SENSOR_RANGE / 2);
 var TANK_MAX_ACCEL = 35;
-var TANK_MAX_TURRET_ROT = (TAU/20);
+var TANK_MAX_TURRET_ROT = (TAU/8);
 var TANK_TOP_SPEED = 7;
 
 /* (tank radius + tank radius)^2 */
