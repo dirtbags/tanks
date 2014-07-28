@@ -480,7 +480,7 @@ var rotate_point = function(angle, point) {
 
 ForfTank.prototype.fireCannon = function(that, vector, dist2) {
     /* If someone's a crater, this is easy */
-    if (this.killer || that.killer) {
+    if ((this.killer && this.killer !== that) || that.killer) {
         return;
     }
 
