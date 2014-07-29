@@ -1,8 +1,8 @@
 #!/usr/bin/env python
+
 """ Here's an example tank, in RFC822ish format:
 
 From: Joe Cool <joe@cool.cc>
-Password: swordfish
 Tank-Name: Red Baron
 Color: #c7e148
 Sensor-0: 50 0 7 1
@@ -18,6 +18,7 @@ import argparse
 import sys
 import email
 import requests
+import os
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Upload forf tanks.",
@@ -27,7 +28,7 @@ def parse_args():
             type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('--url', '-u', nargs='?', metavar='URL',
             help="URL to submit your tank to",
-            default='http://woozle.org/tanks/designer.cgi')
+            default='http://woozle.org/tanks/upload.cgi')
     return parser.parse_args()
 
 def read_tank(infile):
@@ -35,13 +36,16 @@ def read_tank(infile):
     headers = dict(msg.items())
     return headers, msg.get_payload()
 
-def post_tank(headers, code, url='http://woozle.org/tanks/designer.cgi'):
+def post_tank(headers, code, url):
+    token = os.environ.get('token')
+    if not token:
+        raise RuntimeError("Must provide token in 'token' environment variable")
     request = {}
-    request['token'] = headers.get('Password', '')
+    request['token'] = token
     request['name'] = headers.get('Tank-Name', '')
     request['author'] = headers.get('From', '')
     request['color'] = headers.get('Color', '#c0c0c0')
-    for sn in xrange(0, 10):
+    for sn in range(0, 10):
         sensor = 'Sensor-{}'.format(sn)
         if sensor in headers:
             sr, sa, sw, st = headers[sensor].split()
