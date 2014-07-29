@@ -70,9 +70,12 @@ var TANK_CANNON_ADJ2 = ((TANK_CANNON_RANGE + TANK_RADIUS) * (TANK_CANNON_RANGE +
 // initial game grid spacing
 var SPACING = 150;
 
+var MEMORY_SIZE = 10;
+
 var Forf = function() {
     this.datastack = [];
     this.cmdstack = [];
+    this.mem = new Object();
     this.builtins = new Object();
 
     this.builtins["debug!"] = function(myforf) { document.getElementById('debug').innerHTML = myforf.datastack.pop(); };
@@ -151,8 +154,21 @@ var Forf = function() {
             myforf.cmdstack.push(ifclause[i]);
         }
     };
-    // TODO: mset
-    // TODO: mget
+    this.builtins["mset"] = function(myforf) {
+        var pos = myforf.datastack.pop();
+        var a = myforf.datastack.pop();
+        if (pos < 0 || pos >= MEMORY_SIZE) {
+            throw "invalid memory location";
+        }
+        myforf.mem[pos] = a;
+    };
+    this.builtins["mget"] = function(myforf) {
+        var pos = myforf.datastack.pop();
+        if (pos < 0 || pos >= MEMORY_SIZE) {
+            throw "invalid memory location";
+        }
+        myforf.datastack.push(myforf.mem[pos]);
+    };
 };
 
 Forf.prototype.init = function(code) {
