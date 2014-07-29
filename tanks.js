@@ -54,9 +54,7 @@ function Tank(ctx, width, height, color, sensors) {
             this.fire = 5;
         }
         this.led = flags & 2;
-        if (flags & 4) {
-            this.dead++;
-        }
+        this.dead = flags & 4;
         this.sensor_state = sensor_state;
     }
 
