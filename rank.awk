@@ -75,6 +75,7 @@ END {
                 printf("<td>" reason[me] "</td>");
                 printf("<td>" lasterr[me] "</td>");
                 printf("</tr>\n");
+				printf("<!-- score " path[me] " " i " -->\n");
             }
         }
     }
