@@ -70,7 +70,7 @@
     <p>
       <input type="button" onclick="resetTanks();" value="Run"> (Remember to submit (below) when you're done!)
     </p>
-    <p id="debug"></p>
+    <p id="debug">[<tt>debug!</tt> puts things here, remember to remove it before submitting]</p>
     <form id="form">
     <div id="stuff">
     <div id="code">

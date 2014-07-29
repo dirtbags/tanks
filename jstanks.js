@@ -74,7 +74,7 @@ var Forf = function() {
     this.cmdstack = [];
     this.builtins = new Object();
 
-    this.builtins["alert!"] = function(myforf) { alert(myforf.datastack.pop()); };
+    this.builtins["debug!"] = function(myforf) { document.getElementById('debug').innerHTML = myforf.datastack.pop(); };
     var unfunc = function(func) {
         return function(myforf) {
             var a = myforf.datastack.pop();
