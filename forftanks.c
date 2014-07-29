@@ -422,33 +422,32 @@ print_rounds(FILE *f,
     for (j = 0; j < ntanks; j += 1) {
       struct tank *t = &(tanks[j]);
 
+      int k;
+      int flags   = 0;
+      int sensors = 0;
+
+      for (k = 0; k < TANK_MAX_SENSORS; k += 1) {
+        if (t->sensors[k].triggered) {
+          sensors |= (1 << k);
+        }
+      }
+      if (t->turret.firing) {
+        flags |= 1;
+      }
+      if (t->led) {
+        flags |= 2;
+      }
       if (t->killer) {
         alive -= 1;
-        fprintf(f, " 0,\n");
-      } else {
-        int k;
-        int flags   = 0;
-        int sensors = 0;
-
-        for (k = 0; k < TANK_MAX_SENSORS; k += 1) {
-          if (t->sensors[k].triggered) {
-            sensors |= (1 << k);
-          }
-        }
-        if (t->turret.firing) {
-          flags |= 1;
-        }
-        if (t->led) {
-          flags |= 2;
-        }
-        fprintf(f, " [%d,%d,%.2f,%.2f,%d,%d],\n",
-                (int)t->position[0],
-                (int)(t->position[1]),
-                t->angle,
-                t->turret.current,
-                flags,
-                sensors);
+        flags |= 4;
       }
+      fprintf(f, " [%d,%d,%.2f,%.2f,%d,%d],\n",
+              (int)t->position[0],
+              (int)(t->position[1]),
+              t->angle,
+              t->turret.current,
+              flags,
+              sensors);
     }
     fprintf(f, "],\n");
   }

@@ -22,6 +22,8 @@ function Tank(ctx, width, height, color, sensors) {
     this.rotation = 0;
     this.turret = 0;
 
+    this.dead = 0;
+
     // Do all the yucky math up front
     this.sensors = new Array();
     for (i in sensors) {
@@ -52,10 +54,21 @@ function Tank(ctx, width, height, color, sensors) {
             this.fire = 5;
         }
         this.led = flags & 2;
+        if (flags & 4) {
+            this.dead++;
+        }
         this.sensor_state = sensor_state;
     }
 
     this.draw_crater = function() {
+        if (!this.dead) {
+            return;
+        }
+        if (this.fire == 5) {
+            // one frame of cannon fire
+            this.draw_cannon();
+            this.fire = 0;
+        }
         var points = 7;
         var angle = Math.PI / points;
 
@@ -82,6 +95,9 @@ function Tank(ctx, width, height, color, sensors) {
     }
 
     this.draw_sensors = function() {
+        if (this.dead) {
+            return;
+        }
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
@@ -108,6 +124,9 @@ function Tank(ctx, width, height, color, sensors) {
     }
 
     this.draw_tank = function() {
+        if (this.dead) {
+            return;
+        }
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
@@ -119,8 +138,7 @@ function Tank(ctx, width, height, color, sensors) {
         ctx.fillRect(-7,  4, 15, 5);
         ctx.rotate(this.turret);
         if (this.fire) {
-            ctx.fillStyle = ("rgba(255,255,64," + this.fire/5 + ")");
-            ctx.fillRect(0, -1, 45, 2);
+            this.draw_cannon();
             this.fire -= 1;
         } else {
             if (this.led) {
@@ -132,6 +150,11 @@ function Tank(ctx, width, height, color, sensors) {
         }
 
         ctx.restore();
+    }
+
+    this.draw_cannon = function() {
+        ctx.fillStyle = ("rgba(255,255,64," + this.fire/5 + ")");
+        ctx.fillRect(0, -1, 45, 2);
     }
 
     this.draw_wrap_sensors = function() {
@@ -190,28 +213,25 @@ function start(id, game) {
         canvas.width = canvas.width;
         turn = turns[idx];
 
-        // Draw craters first
+        // Update and draw craters first
         for (i in turn) {
             t = turn[i];
-            if (! t) {
-                tanks[i].draw_crater();
+            if (!t) {
+                // old data, force-kill it
+                tanks[i].fire = 0;
+                tanks[i].dead = 5;
+            } else {
+                tanks[i].set_state(t[0], t[1], t[2], t[3], t[4], t[5]);
             }
+            tanks[i].draw_crater();
         }
         // Then sensors
         for (i in turn) {
-            t = turn[i];
-            if (t) {
-                // Surely there's a better way to do this.
-                tanks[i].set_state(t[0], t[1], t[2], t[3], t[4], t[5]);
-                tanks[i].draw_wrap_sensors();
-            }
+            tanks[i].draw_wrap_sensors();
         }
         // Then tanks
         for (i in turn) {
-            t = turn[i];
-            if (t) {
-                tanks[i].draw_tank()
-            }
+            tanks[i].draw_tank()
         }
     }
 

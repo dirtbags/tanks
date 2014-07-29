@@ -746,27 +746,17 @@ var resetTanks = function() {
 
         var activeTanks = 0;
         for (var i = 0; i < ftanks.length; i++) {
-            if (ftanks[i].killer) {
-                tanks[i].draw_crater();
-            } else {
-                activeTanks++;
-            }
-        }
-        if (activeTanks < 2) {
-            clearInterval(interval);
-            interval = null;
-        }
-
-        for (var i = 0; i < ftanks.length; i++) {
-            if (ftanks[i].killer) {
-                continue;
-            }
             var flags = 0;
             if (ftanks[i].turret.firing) {
                 flags |= 1;
             }
             if (ftanks[i].led) {
                 flags |= 2;
+            }
+            if (ftanks[i].killer) {
+                flags |= 4;
+            } else {
+                activeTanks++;
             }
             var sensor_state = 0;
             for (var j = 0; j < ftanks[i].sensors.length; j++) {
@@ -775,13 +765,23 @@ var resetTanks = function() {
                 }
             }
             tanks[i].set_state(ftanks[i].position[0], ftanks[i].position[1], ftanks[i].angle, ftanks[i].turret.current, flags, sensor_state);
+        }
+
+        if (activeTanks < 2) {
+            // we're done
+            clearInterval(interval);
+            interval = null;
+        }
+
+        for (var i = 0; i < ftanks.length; i++) {
+            tanks[i].draw_crater();
+        }
+
+        for (var i = 0; i < tanks.length; i++) {
             tanks[i].draw_wrap_sensors();
         }
 
         for (var i = 0; i < tanks.length; i++) {
-            if (ftanks[i].killer) {
-                continue;
-            }
             tanks[i].draw_tank();
         }
     }
