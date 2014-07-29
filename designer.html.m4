@@ -33,7 +33,7 @@
       need a password, just ask one of the dirtbags.
     </p>
 
-    <form action="designer.cgi" method="post">
+    <form action="upload.cgi" method="post">
       <fieldset id="metadata">
         <legend>Information</legend>
         <table>

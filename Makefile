@@ -24,7 +24,7 @@ forftanks.o: forf.h ctanks.h
 forf.o: forf.c forf.h
 ctanks.o: ctanks.h
 
-%.html: %.html.m4
+%.html: %.html.m4 nav.html.inc
 	m4 $< > $@
 
 clean:

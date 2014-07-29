@@ -61,8 +61,8 @@
     </table>
 
     <p>
-      To get started, head over to the <a href="designer.html">Tank
-      Designer</a> and enter the following example tank.  This tank will
+      To get started, head over to the <a href="debugger.html">Tank
+      Debugger</a> and enter the following example tank.  This tank will
       move around, turn the turret, and fire if there's something in
       front of it.
     </p>
