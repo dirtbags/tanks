@@ -54,14 +54,62 @@
         });
 
         request.done(function(msg) {
-          // TODO: red on error?
           $('#submit-feedback').html(msg);
         });
         request.fail(function(jqXHR, status) {
           // TODO: red on error?
           $('#submit-feedback').html(jqXHR.responseText);
         });
-      }
+      };
+      function onRetrieve() {
+        $('#submit-feedback').html("Retrieving...");
+
+        var tokenprefix = "state/" + $('[name="token"]').val() + "/";
+
+        var makerequest = function(name) {
+          return $.ajax({
+            accept: "text/plain",
+            url: tokenprefix + name,
+            dataType: "text",
+            cache: false
+          });
+        };
+        var setval = function(name, val) {
+            $('[name="' + name + '"]').val(val);
+        };
+
+        var request = makerequest("name");
+        request.done(function(msg) {
+          $('#submit-feedback').html("");
+          setval("name", msg);
+
+          request = makerequest("author");
+          request.done(function(msg) { setval("author", msg); } );
+          request = makerequest("color");
+          request.done(function(msg) { setval("color", msg.replace(/[\r\n]/g, '')); update(); } );
+          request = makerequest("program");
+          request.done(function(msg) { setval("program", msg); } );
+          var sensorfunc = function(id) {
+            return function(msg) {
+              var vals = msg.replace(/[\r\n]/g, '').split(" ");
+              setval("s"+id+"r", vals[0]);
+              setval("s"+id+"a", vals[1]);
+              setval("s"+id+"w", vals[2]);
+              $('[name="' + "s"+id+"t" + '"]').attr('checked', vals[3] != 0);
+              update();
+            };
+          };
+          for (var i = 0; i < 10; i++) {
+            request = makerequest("sensor" + i);
+            request.done(sensorfunc(i));
+          }
+        });
+
+        request.fail(function(jqXHR, status) {
+          // TODO: red on error?
+          $('#submit-feedback').html("error (bad token?)");
+        });
+      };
     </script>
   </head>
   <body style="background: #222; color: #bbb;">
@@ -80,17 +128,21 @@
 1 sensor? { -50 50 set-speed! } if  ( Turn if collision sensor triggered )
       </textarea><br>
       <fieldset id="submit">
-        <p><input type="button" value="Submit" onclick="onSubmit();"> <span id="submit-feedback"> </span></p>
+        <p>
+          <input type="button" value="Submit" onclick="onSubmit();">
+          <input type="button" value="Retrieve" onclick="onRetrieve();">
+          <span id="submit-feedback"> </span>
+        </p>
 
     <p>
-      Before you can get going with a tank, you need a password.  If you
-      need a password, just ask one of the dirtbags.
+      Before you can get going with a tank, you need a token.  If you
+      need a token, just ask one of the dirtbags.
     </p>
 
         <legend>Information</legend>
         <table>
           <tr>
-            <td>Password:</td>
+            <td>Token:</td>
             <td><input name="token" type="password"></td>
           </tr>
           <tr>
