@@ -62,17 +62,22 @@ function Tank(ctx, width, height, color, sensors) {
         if (!this.dead) {
             return;
         }
-        if (this.fire == 5) {
-            // one frame of cannon fire
-            this.draw_cannon();
-            this.fire = 0;
-        }
+
         var points = 7;
         var angle = Math.PI / points;
 
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
+
+        if (this.fire == 5) {
+            ctx.save();
+            ctx.rotate(this.turret);
+            // one frame of cannon fire
+            this.draw_cannon();
+            this.fire = 0;
+            ctx.restore();
+        }
 
         ctx.lineWidth = 2;
         ctx.strokeStyle = craterStroke;
