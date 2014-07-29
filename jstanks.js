@@ -161,7 +161,8 @@ Forf.prototype.init = function(code) {
 Forf.prototype.parse = function() {
     // 'parse' the input
     this.code = this.code.replace(/\([^)]*\)/g, "");
-    var tokens = this.code.split(/\s+/).filter(Boolean); // filter to deal with newlines etc
+    var splitCode = this.code.split(/([{}])/).join(" ");
+    var tokens = splitCode.split(/\s+/).filter(Boolean); // filter to deal with newlines etc
     // FIXME: this is a hack right now because ugh stacks
     var parseTokensAt = function(i, stack) {
         var val = tokens[i];
