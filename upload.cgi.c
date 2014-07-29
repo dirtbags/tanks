@@ -32,9 +32,20 @@ struct {
 	"name", 20}, {
 	"author", 80}, {
 	"color", 10}, {
+	"sensor0", 16}, {
+	"sensor1", 16}, {
+	"sensor2", 16}, {
+	"sensor3", 16}, {
+	"sensor4", 16}, {
+	"sensor5", 16}, {
+	"sensor6", 16}, {
+	"sensor7", 16}, {
+	"sensor8", 16}, {
+	"sensor9", 16}, {
 	"program", 16384}, {
 	NULL, 0}
 };
+
 
 
 size_t inlen;
@@ -166,7 +177,7 @@ croak(int code, char *msg)
 int
 main(int argc, char *argv[])
 {
-	int sensor[10][4];
+	int sensor[10][5];
 	char key[20];
 	char token[40];
 	size_t len;
@@ -214,18 +225,19 @@ main(int argc, char *argv[])
 			}
 			i = atoi(val);
 
+			sensor[n][0] = 1;
 			switch (key[2]) {
 			case 'r':
-				p = 0;
-				break;
-			case 'a':
 				p = 1;
 				break;
-			case 'w':
+			case 'a':
 				p = 2;
 				break;
-			default:
+			case 'w':
 				p = 3;
+				break;
+			default:
+				p = 4;
 				i = (val[0] != '\0');
 				break;
 			}
@@ -285,13 +297,16 @@ main(int argc, char *argv[])
 		for (i = 0; i < 10; i += 1) {
 			FILE *f;
 
-			snprintf(dest, sizeof(dest), "%s%s/sensor%d", BASE_PATH, token, i);
-			f = fopen(dest, "w");
-			if (!f)
-				break;
-
-			fprintf(f, "%d %d %d %d\n", sensor[i][0], sensor[i][1], sensor[i][2], sensor[i][3]);
-			fclose(f);
+			if (sensor[i][0]) {
+				snprintf(dest, sizeof(dest), "%s%s/sensor%d", BASE_PATH, token, i);
+				f = fopen(dest, "w");
+				if (!f) {
+					break;
+				}
+	
+				fprintf(f, "%d %d %d %d\n", sensor[i][1], sensor[i][2], sensor[i][3], sensor[i][4]);
+				fclose(f);
+			}
 		}
 	}
 
