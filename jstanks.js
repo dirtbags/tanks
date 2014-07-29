@@ -55,6 +55,7 @@ var TANK_CANNON_RANGE = (TANK_SENSOR_RANGE / 2);
 var TANK_MAX_ACCEL = 35;
 var TANK_MAX_TURRET_ROT = (TAU/8);
 var TANK_TOP_SPEED = 7;
+var TANK_FRICTION = 0.75;
 
 /* (tank radius + tank radius)^2 */
 var TANK_COLLISION_ADJ2 = ((TANK_RADIUS + TANK_RADIUS) * (TANK_RADIUS + TANK_RADIUS));
@@ -367,7 +368,7 @@ ForfTank.prototype.move = function() {
            to be a penalty for having the treads go in opposite directions.
            This probably plays hell with precisely-planned tanks, which I
            find very ha ha. */
-        var friction = .75 * (Math.abs(this.speed.current[0] - this.speed.current[1]) / 200);
+        var friction = TANK_FRICTION * (Math.abs(this.speed.current[0] - this.speed.current[1]) / 200);
         var v = [0, 0];
         v[0] = this.speed.current[0] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
         v[1] = this.speed.current[1] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
