@@ -130,7 +130,7 @@ get-turret 12 + set-turret!         ( Rotate turret )
       <dd>
         Turret angle can be set between -359° and 359°, with 0° directly
         in front of the tank.  Be aware that it takes time for the
-        turret to swing around: the turret can swing about 18° per turn.
+        turret to swing around: the turret can swing about 45° per turn.
       </dd>
 
       <dt>Cannon range and recharging</dt>
