@@ -14,6 +14,7 @@
 #define TANK_MAX_ACCEL       35
 #define TANK_MAX_TURRET_ROT  (TAU/8)
 #define TANK_TOP_SPEED       7
+#define TANK_FRICTION 0.75
 
 /* (tank radius + tank radius)^2 */
 #define TANK_COLLISION_ADJ2 \

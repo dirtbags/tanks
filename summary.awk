@@ -1,24 +1,24 @@
 #! /usr/bin/awk -f
 
 function esc(s) {
-    gsub(/&/, "&amp;", s);
-    gsub(/</, "&lt;", s);
-    gsub(/>/, "&gt;", s);
-    return s;
+	gsub(/&/, "&amp;", s);
+	gsub(/</, "&lt;", s);
+	gsub(/>/, "&gt;", s);
+	return s;
 }
 
 BEGIN {
     ngames = 20;
     getline rounds < "next-round";
 
-    print "<!DOCTYPE html>";
-    print "<html>";
-    print "  <head>";
-    print "    <title>Dirtbags Tanks</title>";
-    print "    <link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\">";
-    print "  </head>";
-    print "  <body>";
-    print "    <h1>Dirtbags Tanks</h1>";
+	print "<!DOCTYPE html>";
+	print "<html>";
+	print "  <head>";
+	print "	<title>Dirtbags Tanks</title>";
+	print "	<link rel=\"stylesheet\" href=\"style.css\" type=\"text/css\">";
+	print "  </head>";
+	print "  <body>";
+	print "	<h1>Dirtbags Tanks</h1>";
 
     print "    <p>New here?  Read the <a href=\"intro.html\">introduction</a>.</p>";
     print "    <p>New round every minute.</p>";
@@ -68,10 +68,10 @@ BEGIN {
     }
     print "    </ul>";
 
-    while (getline < ENVIRON["NAV_HTML_INC"]) {
-        print;
-    }
+	while (getline < ENVIRON["NAV_HTML_INC"]) {
+		print;
+	}
 
-    print "  </body>";
-    print "</html>";
+	print "  </body>";
+	print "</html>";
 }

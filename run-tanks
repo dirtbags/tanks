@@ -64,8 +64,7 @@ cat <<EOF >>$fn
 </html>
 EOF
 
-summary.awk $tanks > summary.html.$$
-mv summary.html.$$ summary.html
+summary.awk $tanks > summary.html.$$ && mv summary.html.$$ summary.html
 
 echo "done."
 
