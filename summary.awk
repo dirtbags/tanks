@@ -25,7 +25,7 @@ BEGIN {
     print "    <h2>Rankings</h2>";
     print "    <p>Over the last " ngames" games only.</p>";
     print "    <ol>";
-	for (i = rounds - ngames - 1; i < rounds; i += 1) {
+	for (i = rounds - ngames - 1; i > 0 && i < rounds; i += 1) {
 		fn = sprintf("round-%04d.html", i)
 		while (getline < fn) {
 			if ($2 == "score") {
