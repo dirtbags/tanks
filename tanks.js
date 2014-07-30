@@ -178,10 +178,22 @@ function Tank(ctx, width, height, color, sensors) {
     }
 }
 
+var loop_id;
+var updateFunc = null;
+function togglePlayback() {
+    console.log($("#playing").prop("checked"));
+    if ($("#playing").prop("checked")) {
+        loop_id = setInterval(updateFunc, 66);
+    } else {
+        clearInterval(loop_id);
+        loop_id = null;
+    }
+    $("#pauselabel").toggleClass("ui-icon-play ui-icon-pause");
+}
+
 function start(id, game) {
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
-    var loop_id;
 
     canvas.width = game[0][0];
     canvas.height = game[0][1];
@@ -238,10 +250,16 @@ function start(id, game) {
         }
     }
 
+    updateFunc = update;
     loop_id = setInterval(update, 66);
     //loop_id = setInterval(update, 400);
     if (fps) {
         setInterval(update_fps, 1000);
+    }
+
+    if (id === "battlefield") {
+        $("#game_box").append('<p><input type="checkbox" checked id="playing" onclick="togglePlayback();"><label for="playing"><span class="ui-icon ui-icon-pause" id="pauselabel"></class></label></p>');
+        $('#playing').button();
     }
 }
 

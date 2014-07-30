@@ -36,6 +36,9 @@ cat <<EOF >$fn
 <html>
   <head>
     <title>Tanks Round $next</title>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.0/themes/ui-lightness/jquery-ui.css" type="text/css">
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="//code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
     <script type="application/javascript" src="tanks.js"></script>
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="application/javascript">
