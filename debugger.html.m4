@@ -37,6 +37,10 @@
     <script type="application/javascript">
       window.onload = function() { design(); update(); };
       function onSubmit() {
+        if ($('[name="name"]').val() === "") {
+            $('#submit-feedback').html("No name?");
+            return;
+        }
         $('#submit-feedback').html("Submitting...");
 
         // http://stackoverflow.com/questions/169506/obtain-form-input-fields-using-jquery
