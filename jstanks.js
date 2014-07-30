@@ -73,22 +73,20 @@ var SPACING = 150;
 var MEMORY_SIZE = 10;
 
 var Forf = function() {
-    this.datastack = [];
-    this.cmdstack = [];
     this.mem = new Object();
     this.builtins = new Object();
 
-    this.builtins["debug!"] = function(myforf) { document.getElementById('debug').innerHTML = myforf.datastack.pop(); };
+    this.builtins["debug!"] = function(myforf) { document.getElementById('debug').innerHTML = myforf.popData(); };
     var unfunc = function(func) {
         return function(myforf) {
-            var a = myforf.datastack.pop();
+            var a = myforf.popData();
             myforf.datastack.push(~~func(a)); // truncate, FIXME
         };
     };
     var binfunc = function(func) {
         return function(myforf) {
-            var a = myforf.datastack.pop();
-            var b = myforf.datastack.pop();
+            var a = myforf.popData();
+            var b = myforf.popData();
             myforf.datastack.push(~~func(b,a)); // truncate?, FIXME
         };
     };
@@ -119,22 +117,22 @@ var Forf = function() {
     this.builtins["abs"] = unfunc(function(a) { return Math.abs(a); });
     // FIXME: the three following functions can only manipulate numbers in cforf
     this.builtins["dup"] = function(myforf) {
-        var val = myforf.datastack.pop();
+        var val = myforf.popData();
         myforf.datastack.push(val);
         myforf.datastack.push(val);
     };
     this.builtins["pop"] = function(myforf) {
-        myforf.datastack.pop();
+        myforf.popData();
     };
     this.builtins["exch"] = function(myforf) {
-       var a = myforf.datastack.pop();
-       var b = myforf.datastack.pop();
+       var a = myforf.popData();
+       var b = myforf.popData();
        myforf.datastack.push(a);
        myforf.datastack.push(b);
     };
     this.builtins["if"] = function(myforf) {
-       var ifclause = myforf.datastack.pop();
-       var cond = myforf.datastack.pop();
+       var ifclause = myforf.popData();
+       var cond = myforf.popData();
        if (cond) {
             // TODO: make sure ifclause is a list
             for (var i = 0; i < ifclause.length; i++) {
@@ -143,9 +141,9 @@ var Forf = function() {
         }
     };
     this.builtins["ifelse"] = function(myforf) {
-        var elseclause = myforf.datastack.pop();
-        var ifclause = myforf.datastack.pop();
-        var cond = myforf.datastack.pop();
+        var elseclause = myforf.popData();
+        var ifclause = myforf.popData();
+        var cond = myforf.popData();
         if (!cond) {
             ifclause = elseclause;
         }
@@ -155,15 +153,15 @@ var Forf = function() {
         }
     };
     this.builtins["mset"] = function(myforf) {
-        var pos = myforf.datastack.pop();
-        var a = myforf.datastack.pop();
+        var pos = myforf.popData();
+        var a = myforf.popData();
         if (pos < 0 || pos >= MEMORY_SIZE) {
             throw "invalid memory location";
         }
         myforf.mem[pos] = a;
     };
     this.builtins["mget"] = function(myforf) {
-        var pos = myforf.datastack.pop();
+        var pos = myforf.popData();
         if (pos < 0 || pos >= MEMORY_SIZE) {
             throw "invalid memory location";
         }
@@ -171,11 +169,20 @@ var Forf = function() {
     };
 };
 
+Forf.prototype.popData = function() {
+    if (this.datastack.length === 0) {
+        throw "tried to pop from empty stack";
+    }
+    return this.datastack.pop();
+};
+
 Forf.prototype.init = function(code) {
     this.code = code;
 };
 
 Forf.prototype.parse = function() {
+    this.cmdstack = [];
+
     // 'parse' the input
     this.code = this.code.replace(/\([^)]*\)/g, "");
     var splitCode = this.code.split(/([{}])/).join(" ");
@@ -214,6 +221,8 @@ Forf.prototype.parse = function() {
 };
 
 Forf.prototype.run = function() {
+    this.datastack = [];
+
     var running = true;
     while (running && this.cmdstack.length) {
         var val = this.cmdstack.pop();
@@ -222,7 +231,7 @@ Forf.prototype.run = function() {
             if (val in this.builtins) {
                 func(this);
             } else {
-                throw "no such function " + val;
+                throw "no such function '" + val + "'";
             }
         } else {
             this.datastack.push(val);
@@ -258,12 +267,12 @@ var ForfTank = function() {
         myforf.fire();
     };
     this.builtins["set-speed!"] = function(myforf) {
-        var right = myforf.datastack.pop();
-        var left = myforf.datastack.pop();
+        var right = myforf.popData();
+        var left = myforf.popData();
         myforf.setSpeed(left, right);
     };
     this.builtins["set-turret!"] = function(myforf) {
-        var angle = myforf.datastack.pop();
+        var angle = myforf.popData();
         myforf.setTurret(deg2rad(angle));
     };
     this.builtins["get-turret"] = function(myforf) {
@@ -271,15 +280,15 @@ var ForfTank = function() {
         myforf.datastack.push(rad2deg(angle));
     };
     this.builtins["sensor?"] = function(myforf) {
-        var sensor_num = myforf.datastack.pop();
+        var sensor_num = myforf.popData();
         myforf.datastack.push(myforf.getSensor(sensor_num));
     };
     this.builtins["set-led!"] = function(myforf) {
-        var active = myforf.datastack.pop();
+        var active = myforf.popData();
         myforf.setLed(active);
     };
     this.builtins["random"] = function(myforf) {
-        var max = myforf.datastack.pop();
+        var max = myforf.popData();
         if (max < 1) {
              myforf.datastack.push(0);
              return;
@@ -658,12 +667,25 @@ var updateTanks = function(tanks) {
     }
 
     /* Run programs */
+    var errors = [];
     for (var i = 0; i < tanks.length; i++) {
         if (tanks[i].killer) {
             continue;
         }
-        tanks[i].parse(tanks[i].code);
-        tanks[i].run();
+        try {
+            tanks[i].parse(tanks[i].code);
+            tanks[i].run();
+        } catch (e) {
+            errors.push(e);
+        }
+    }
+    if (errors.length) {
+        if (interval) {
+            clearInterval(interval);
+        }
+
+        document.getElementById('debug').innerHTML = "Error: " + errors.join();
+        return;
     }
 
     /* Fire cannons and check for crashes */
@@ -695,6 +717,8 @@ var resetTanks = function() {
     if (interval) {
         clearInterval(interval);
     }
+
+    document.getElementById('debug').innerHTML = "&nbsp;";
 
     tanks = [];
     ftanks = [];
