@@ -82,19 +82,26 @@
             $('[name="' + name + '"]').val(val);
         };
 
+        var finishedreqs = 0;
         var request = makerequest("name");
         request.done(function(msg) {
-          $('#submit-feedback').html("");
           setval("name", msg);
 
+          var gotreq = function() {
+            finishedreqs++;
+            if (finishedreqs == 13) {
+              $('#submit-feedback').html("Retrieved.");
+            }
+          };
           request = makerequest("author");
-          request.done(function(msg) { setval("author", msg); } );
+          request.done(function(msg) { gotreq(); setval("author", msg); } );
           request = makerequest("color");
-          request.done(function(msg) { setval("color", msg.replace(/[\r\n]/g, '')); update(); } );
+          request.done(function(msg) { gotreq(); setval("color", msg.replace(/[\r\n]/g, '')); update(); } );
           request = makerequest("program");
-          request.done(function(msg) { setval("program", msg); } );
+          request.done(function(msg) { gotreq(); setval("program", msg); } );
           var sensorfunc = function(id) {
             return function(msg) {
+              gotreq();
               var vals = msg.replace(/[\r\n]/g, '').split(" ");
               setval("s"+id+"r", vals[0]);
               setval("s"+id+"a", vals[1]);
