@@ -181,7 +181,6 @@ function Tank(ctx, width, height, color, sensors) {
 var loop_id;
 var updateFunc = null;
 function togglePlayback() {
-    console.log($("#playing").prop("checked"));
     if ($("#playing").prop("checked")) {
         loop_id = setInterval(updateFunc, 66);
     } else {
@@ -216,15 +215,7 @@ function start(id, game) {
         lastframe = frame;
     }
 
-    function update() {
-        var idx = frame % (turns.length + 20);
-        var turn;
-
-        frame += 1;
-        if (idx >= turns.length) {
-            return;
-        }
-
+    function drawFrame(idx) {
         canvas.width = canvas.width;
         turn = turns[idx];
 
@@ -248,6 +239,35 @@ function start(id, game) {
         for (i in turn) {
             tanks[i].draw_tank()
         }
+
+        document.getElementById('frameid').innerHTML = idx;
+    }
+
+    function update() {
+        var idx = frame % (turns.length + 20);
+        var turn;
+
+        frame += 1;
+        if (idx >= turns.length) {
+            return;
+        }
+
+        drawFrame(idx);
+
+        $('#seekslider').slider('value', idx);
+    }
+
+    function seekToFrame(newidx) {
+        var idx = frame % (turns.length + 20);
+        if (idx !== newidx) {
+            frame = newidx;
+            drawFrame(newidx);
+        }
+        // make sure we're paused
+        if ($("#playing").prop("checked")) {
+            $("#playing").prop("checked", false);
+            togglePlayback();
+        }
     }
 
     updateFunc = update;
@@ -258,8 +278,33 @@ function start(id, game) {
     }
 
     if (id === "battlefield") {
-        $("#game_box").append('<p><input type="checkbox" checked id="playing" onclick="togglePlayback();"><label for="playing"><span class="ui-icon ui-icon-pause" id="pauselabel"></class></label></p>');
+        $("#game_box").append('<p><input type="checkbox" checked id="playing" onclick="togglePlayback();"><label for="playing"><span class="ui-icon ui-icon-pause" id="pauselabel"></class></label> <span id="frameid">0</span> <span id="seekslider" style="width: 75%; float: right;"></span></p>');
         $('#playing').button();
+        var slider = $('#seekslider');
+        slider.slider({ max: turns.length-1, slide: function(event, ui) { seekToFrame(ui.value); } });
+
+        var spacing = 100 / turns.length;
+        var deaths = [];
+        for (i in turns[0]) {
+            deaths.push(false);
+        }
+        var percent = 0;
+        for (var f = 0; f < turns.length; f++) {
+            var turn = turns[f];
+            if (percent < (spacing * f)) {
+                percent = spacing * f;
+            }
+            for (var i = 0; i < turn.length; i++) {
+                if (deaths[i]) { continue; }
+                if (!turn[i] || (turn[i][4] & 4)) {
+                    deaths[i] = true;
+                    // http://stackoverflow.com/questions/8648963/add-tick-marks-to-jquery-slider
+                    $('<span class="ui-slider-tick-mark"></span>').css('left', percent +  '%').css('background-color', game[1][i][0]).appendTo(slider);
+                    percent++;
+                    break;
+                }
+            }
+        }
     }
 }
 
