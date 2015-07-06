@@ -39,7 +39,7 @@ def read_tank(infile):
 def post_tank(headers, code, url):
     token = os.environ.get('token')
     if not token:
-        raise RuntimeError("Must provide token in 'token' environment variable")
+        token = open('token').readline().strip()
     request = {}
     request['token'] = token
     request['name'] = headers.get('Tank-Name', '')

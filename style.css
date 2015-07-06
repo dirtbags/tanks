@@ -191,3 +191,10 @@ table.pollster thead {
 .swatch {
     color: #000000;
 }
+
+.ui-slider-tick-mark {
+    display: inline-block;
+    width: 2px;
+    height: 100%;
+    position: absolute;
+}

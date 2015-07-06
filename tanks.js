@@ -62,17 +62,22 @@ function Tank(ctx, width, height, color, sensors) {
         if (!this.dead) {
             return;
         }
-        if (this.fire == 5) {
-            // one frame of cannon fire
-            this.draw_cannon();
-            this.fire = 0;
-        }
+
         var points = 7;
         var angle = Math.PI / points;
 
         ctx.save();
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation);
+
+        if (this.fire == 5) {
+            ctx.save();
+            ctx.rotate(this.turret);
+            // one frame of cannon fire
+            this.draw_cannon();
+            this.fire = 0;
+            ctx.restore();
+        }
 
         ctx.lineWidth = 2;
         ctx.strokeStyle = craterStroke;
@@ -173,10 +178,21 @@ function Tank(ctx, width, height, color, sensors) {
     }
 }
 
+var loop_id;
+var updateFunc = null;
+function togglePlayback() {
+    if ($("#playing").prop("checked")) {
+        loop_id = setInterval(updateFunc, 66);
+    } else {
+        clearInterval(loop_id);
+        loop_id = null;
+    }
+    $("#pauselabel").toggleClass("ui-icon-play ui-icon-pause");
+}
+
 function start(id, game) {
     var canvas = document.getElementById(id);
     var ctx = canvas.getContext('2d');
-    var loop_id;
 
     canvas.width = game[0][0];
     canvas.height = game[0][1];
@@ -199,15 +215,7 @@ function start(id, game) {
         lastframe = frame;
     }
 
-    function update() {
-        var idx = frame % (turns.length + 20);
-        var turn;
-
-        frame += 1;
-        if (idx >= turns.length) {
-            return;
-        }
-
+    function drawFrame(idx) {
         canvas.width = canvas.width;
         turn = turns[idx];
 
@@ -231,12 +239,72 @@ function start(id, game) {
         for (i in turn) {
             tanks[i].draw_tank()
         }
+
+        document.getElementById('frameid').innerHTML = idx;
     }
 
+    function update() {
+        var idx = frame % (turns.length + 20);
+        var turn;
+
+        frame += 1;
+        if (idx >= turns.length) {
+            return;
+        }
+
+        drawFrame(idx);
+
+        $('#seekslider').slider('value', idx);
+    }
+
+    function seekToFrame(newidx) {
+        var idx = frame % (turns.length + 20);
+        if (idx !== newidx) {
+            frame = newidx;
+            drawFrame(newidx);
+        }
+        // make sure we're paused
+        if ($("#playing").prop("checked")) {
+            $("#playing").prop("checked", false);
+            togglePlayback();
+        }
+    }
+
+    updateFunc = update;
     loop_id = setInterval(update, 66);
     //loop_id = setInterval(update, 400);
     if (fps) {
         setInterval(update_fps, 1000);
+    }
+
+    if (id === "battlefield") {
+        $("#game_box").append('<p><input type="checkbox" checked id="playing" onclick="togglePlayback();"><label for="playing"><span class="ui-icon ui-icon-pause" id="pauselabel"></class></label> <span id="frameid">0</span> <span id="seekslider" style="width: 75%; float: right;"></span></p>');
+        $('#playing').button();
+        var slider = $('#seekslider');
+        slider.slider({ max: turns.length-1, slide: function(event, ui) { seekToFrame(ui.value); } });
+
+        var spacing = 100 / turns.length;
+        var deaths = [];
+        for (i in turns[0]) {
+            deaths.push(false);
+        }
+        var percent = 0;
+        for (var f = 0; f < turns.length; f++) {
+            var turn = turns[f];
+            if (percent < (spacing * f)) {
+                percent = spacing * f;
+            }
+            for (var i = 0; i < turn.length; i++) {
+                if (deaths[i]) { continue; }
+                if (!turn[i] || (turn[i][4] & 4)) {
+                    deaths[i] = true;
+                    // http://stackoverflow.com/questions/8648963/add-tick-marks-to-jquery-slider
+                    $('<span class="ui-slider-tick-mark"></span>').css('left', percent +  '%').css('background-color', game[1][i][0]).appendTo(slider);
+                    percent++;
+                    break;
+                }
+            }
+        }
     }
 }
 
