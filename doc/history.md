@@ -1,9 +1,11 @@
 History
-=======
+-------
 
 This is a port of the "Tanks" program written by Paul Ferrell
 <pflarr@clanspum.net> in 2009-2010.  Paul created the entire game based
-off a brief description I provided him of Crobots and a vague desire to
+off a brief description I provided him of
+[Crobots](http://tpoindex.github.io/crobots)
+and a vague desire to
 "make something fun for high school kids to learn some programming."  We
 ran Paul's Tanks as part of a 100-attendee computer security contest in
 February of 2010 and by all accounts it was a huge success.  It even
@@ -33,7 +35,8 @@ that something like Forth would be a better language.  I added some code
 to accept a scaled-down version of PostScript.  The IRC channel we
 frequent collectively agreed to give this new language the derisive name
 "Forf", which should ideally be followed by punching someone after it is
-spoken aloud.  
+spoken aloud.  I wrote a Python implementation of Forf, which was slow,
+and then Adam Glasgall wrote a C implementation, which was quick.
 
 I decided to take Tanks to Def Con in July 2010, and just for bragging
 rights, to have it run on an Asus WL-500gU.  This is a $50 device with a
@@ -70,4 +73,3 @@ following reasons:
 * Runs in fixed size memory
 * Not Turing-complete, I think (impossible to make endless loops)
 * Lends itself to genetic algorithms
-
