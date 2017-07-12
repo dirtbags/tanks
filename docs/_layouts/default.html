@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="{{ site.lang | default: "en-US" }}">
+  <head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="{{ '/assets/css/dirtbags.css?v=' | append: site.github.build_revision | relative_url }}">
+    <link rel="icon" type="image/png" href="{{ '/assets/images/icon.png' | relative_url }}">
+{% if page.scripts %}{% for js_file in page.scripts %}
+	    <script src="{{ js_file }}"></script>
+{% endfor %}{% endif %}
+    <title>{{ site.title | default: site.github.repository_name }} by {{ site.github.owner_name }}</title>
+  </head>
+
+  <body>
+    <h1 id="title">{{ page.title | default: site.title }}</h1>
+
+{{ content }}
+
+    <nav>
+      <ul>
+        <li><a href="{{ '/' | relative_url }}">Home</a></li>
+        <li><a href="{{ '/running' | relative_url }}">Running</a></li>
+        <li><a href="{{ '/history' | relative_url }}">History</a></li>
+        <li><a href="{{ '/thanks' | relative_url }}">Thanks</a></li>
+        <li><a href="https://github.com/dirtbags/tanks" title="Tanks on Github">Source</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>

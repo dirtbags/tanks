@@ -1,0 +1,151 @@
+/**** document ****/
+
+html {
+    background: #eed url(/assets/images/grunge.png) repeat-x;
+}
+
+body {
+    font-family: sans-serif;
+    color: #112;
+    padding: 10px;
+    max-width: 700px;
+}
+
+/**** heading ****/
+
+#title {
+    text-transform: lowercase;
+    font-size: 1.6em;
+    padding: 3px;
+    margin: 0 0 1em 2em;
+}
+
+#title:before {
+   color: #999;
+   letter-spacing: -0.1em;
+   content: "Dirtbags: ";
+}
+
+/*** left side bar ***/
+
+nav h2 {
+  display: none;
+}
+
+nav ul {
+  list-style: none;
+  text-align: center;
+}
+
+nav li {
+    display: inline;
+}
+
+nav li a {
+  text-transform: lowercase;
+  font-size: 0.9em;
+}
+
+nav li + li:before {
+    content: " | ";
+}
+
+
+/**** body ****/
+
+a img {
+    border: 0px;
+}
+
+a {
+    text-decoration: none;
+    color: #2a4;
+    font-weight: bold;
+}
+
+a:hover {
+    color: #ddc;
+    background: #2a4;
+}
+
+
+h1, h2, h3 {
+    color: #464;
+    letter-spacing: -0.05em;
+}
+
+.readme {
+    background-color: #ccc;
+    margin: 1em;
+}
+
+pre {
+    background-color: #ccc;
+    border: solid #888 2px;
+    padding: 0.25em;
+}
+
+
+th {
+    vertical-align: top;
+    text-align: center;
+}
+td {
+    vertical-align: top;
+    text-align: right;
+}
+
+p {
+    line-height: 1.4em;
+    margin-bottom: 20px;
+}
+
+hr {
+    border: 1px solid #444;
+}
+
+dt {
+    white-space: pre;
+    background-color: #333;
+    padding: 5px;
+    border: 2px solid green;
+    border-bottom: none;
+    font-weight: bold;
+}
+
+dd {
+    border: 2px solid green;
+    margin: 0px;
+    padding: 5px;
+    background-color: #282828;
+}
+
+
+/**** special cases ****/
+
+.wide {
+    max-width: inherit;
+}
+
+.figure {
+    margin: 0.5em 1em;
+    float: right;
+    font-size: small;
+    text-align: center;
+}
+
+.scoreboard {
+    background: #222;
+}
+
+.scoreboard td {
+    height: 400px;
+}
+
+#battlefield {
+    border: 2px solid green;
+}
+
+.solved {
+    text-decoration: line-through;
+}

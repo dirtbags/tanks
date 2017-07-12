@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset='utf-8'>
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="/assets/css/dirtbags.css?v=">
+    <link rel="icon" type="image/png" href="/assets/images/icon.png">
+
+    <title> by </title>
+  </head>
+
+  <body>
+    <h1 id="title">Running Tanks</h1>
+
+<p>Unfortunately, it’s kind of a mess right now.
+I know there are a few forks of this code,
+and I would love it if someone proposed a merge to clearly illustrate how to run tanks.</p>
+
+<p>When I spin up a new tanks game,
+typically I run something like:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>while sleep 60; do ./round.sh */; done
+</code></pre>
+</div>
+
+<p>This assumes all your tanks directories are in the same place as <code class="highlighter-rouge">round.sh</code>.</p>
+
+<h2 id="included-programs">Included programs</h2>
+
+<p>I tried to stick with the Unix philosophy of one program per task.  I
+also tried to avoid doing any string processing in C.  The result is a
+hodgepodge of C, Bourne shell, and awk, but at least each piece is
+fairly simple to audit.</p>
+
+<h3 id="roundsh-tank1-tank2-">round.sh tank1 tank2 …</h3>
+
+<p>Runs a single round, awards points with rank.awk, and creates a new
+summary.html with summary.awk.  This is the main interface that you want
+to run from cron or whatever.</p>
+
+<h3 id="forftanks-tank1-tank2-">forftanks tank1 tank2 …</h3>
+
+<p>A program to run a round of tanks and output a JSON description of the
+game.  This is what tanks.js uses to render a game graphically.
+The object printed contains:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[[game-width, game-height],
+ [[tank1-color, 
+  [[sensor1range, sensor1angle, sensor1width, sensor1turret],
+   ...]],
+  ...],
+ [[
+  [tank1x, tank1y, tank1angle, tank1sensangle, 
+   tank1flags, tank1sensors],
+  ...],
+ ...]]
+</code></pre>
+</div>
+
+<p>If file descriptor 3 is open for writes, it also outputs the results of
+the round to fd3.</p>
+
+<h3 id="rankawk">rank.awk</h3>
+
+<p>Processes the fd3 output of forftanks to award points and output an
+HTML results table.</p>
+
+<h3 id="summaryawk-tank1-tank2">summary.awk tank1 tank2</h3>
+
+<p>Creates summary.html, linking to all rounds and showing overall
+standing.</p>
+
+<h3 id="designercgi">designer.cgi</h3>
+
+<p>Accepts form input and writes a tank.</p>
+
+
+
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/running">Running</a></li>
+        <li><a href="/history">History</a></li>
+        <li><a href="/thanks">Thanks</a></li>
+        <li><a href="https://github.com/dirtbags/tanks" title="Tanks on Github">Source</a></li>
+      </ul>
+    </nav>
+  </body>
+</html>

@@ -1,5 +1,9 @@
-History
--------
+---
+title: History
+scripts:
+ - assets/js/tanks.js
+ - assets/js/figures.js
+---
 
 This is a port of the "Tanks" program written by Paul Ferrell
 <pflarr@clanspum.net> in 2009-2010.  Paul created the entire game based
@@ -29,6 +33,18 @@ called "Bullet", which looked like this:
     sense(1): turretcw();
     sense(2): turretccw();
     sense(0): fire();
+
+<table class="figure">
+  <caption>"Chashtank" cleans up.</caption>
+  <tr>
+    <td>
+      <canvas id="shortround"></canvas>
+      <script type="application/javascript">
+        start("shortround", shortround);
+      </script>
+    </td>
+  </tr>
+</table>
 
 Nick Moffitt played with this original version and convinced me (Neale)
 that something like Forth would be a better language.  I added some code
