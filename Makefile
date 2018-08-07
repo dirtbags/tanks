@@ -4,18 +4,23 @@ WWW = style.css grunge.png designer.js figures.js tanks.js nav.html.inc jstanks.
 
 CFLAGS = -Wall
 
+DESTDIR = /opt/tanks
+
 all: $(BINARIES) $(HTML)
 
 install:
-	install -d $(DESTDIR)/usr/bin
-	install run-tanks $(DESTDIR)/usr/bin
-	install forftanks $(DESTDIR)/usr/bin
+	install -d $(DESTDIR)/bin
+    install go.sh $(DESTDIR)/bin
+	install round.sh $(DESTDIR)/bin
+	install forftanks $(DESTDIR)/bin
 
-	install -d $(DESTDIR)/usr/lib/tanks
-	install designer.cgi $(DESTDIR)/usr/lib/tanks
-	install $(HTML) $(DESTDIR)/usr/lib/tanks
-	install $(WWW) $(DESTDIR)/usr/lib/tanks
-	cp -r examples $(DESTDIR)/usr/lib/tanks/examples
+	install -d $(DESTDIR)/www
+	install designer.cgi $(DESTDIR)/www
+	install $(HTML) $(DESTDIR)/www
+	install $(WWW) $(DESTDIR)/www
+
+    install -d $(DESTDIR)/examples
+	cp -r examples $(DESTDIR)/examples
 
 forftanks: forftanks.o ctanks.o forf.o
 forftanks: LDLIBS = -lm
