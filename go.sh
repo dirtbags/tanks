@@ -6,4 +6,11 @@
 ) &
 
 (
-  cd
+  cd /tanks
+  while true; do
+    ./round.sh user/*/
+    sleep 60
+  done
+) &
+
+wait

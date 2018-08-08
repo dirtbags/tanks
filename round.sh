@@ -8,6 +8,7 @@ else
     exit 1
 fi
 
+BINDIR=$(dirname $0)
 TANKS_GAME=${TANKS_GAME:-forftanks}
 NAV_HTML_INC=${NAV_HTML_INC:-./nav.html.inc} export NAV_HTML_INC
 
@@ -59,7 +60,7 @@ window.onload = go;
     <div id="game_box"><canvas id="battlefield"></canvas></div>
     <p><span id="fps">0</span> fps</p>
 EOF
-rank.awk $rfn >>$fn
+awk -f $BINDIR/rank.awk $rfn >>$fn
 rm -f $rfn
 cat $NAV_HTML_INC >>$fn
 cat <<EOF >>$fn
@@ -67,7 +68,7 @@ cat <<EOF >>$fn
 </html>
 EOF
 
-summary.awk $tanks > summary.html.$$ && mv summary.html.$$ summary.html
+awk -f $BINDIR/summary.awk $tanks > summary.html.$$ && mv summary.html.$$ summary.html
 
 echo "done."
 
