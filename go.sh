@@ -1,14 +1,14 @@
 #! /bin/sh
 
+cd $(dirname $0)/../www
+
 (
-  cd /tanks/www
   s6-tcpserver -u 80 -g 80 0.0.0.0 80 /usr/bin/eris -c -.
 ) &
 
 (
-  cd /tanks
   while true; do
-    ./round.sh user/*/
+    ../bin/round.sh */
     sleep 60
   done
 ) &

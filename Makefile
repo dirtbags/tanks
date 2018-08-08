@@ -19,8 +19,8 @@ install: $(BINARIES) $(HTML)
 
 	install -d $(DESTDIR)/www
 	install upload.cgi $(DESTDIR)/www
-	install --mode=0644 $(HTML) $(DESTDIR)/www
-	install --mode=0644 $(WWW) $(DESTDIR)/www
+	install -m 0644 $(HTML) $(DESTDIR)/www
+	install -m 0644 $(WWW) $(DESTDIR)/www
 
 	install -d $(DESTDIR)/examples
 	cp -r examples $(DESTDIR)/examples
