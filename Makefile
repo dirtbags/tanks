@@ -17,7 +17,7 @@ install: $(BINARIES) $(HTML)
 	install summary.awk $(DESTDIR)/bin
 	install forftanks $(DESTDIR)/bin
 
-	install -d $(DESTDIR)/www
+	install -d -o $(id -u www) -g $(id -g www) $(DESTDIR)/www
 	install upload.cgi $(DESTDIR)/www
 	install -m 0644 $(HTML) $(DESTDIR)/www
 	install -m 0644 $(WWW) $(DESTDIR)/www

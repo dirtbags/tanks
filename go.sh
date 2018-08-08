@@ -3,7 +3,7 @@
 cd $(dirname $0)/../www
 
 (
-  s6-tcpserver -u 80 -g 80 0.0.0.0 80 /usr/bin/eris -c -.
+  s6-tcpserver -u $(id -u www) -g $(id -g www) 0.0.0.0 80 /usr/bin/eris -c -.
 ) &
 
 (

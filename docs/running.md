@@ -38,18 +38,18 @@ game.  This is what tanks.js uses to render a game graphically.
 The object printed contains:
 
     [[game-width, game-height],
-     [[tank1-color, 
+     [[tank1-color,
       [[sensor1range, sensor1angle, sensor1width, sensor1turret],
        ...]],
       ...],
      [[
-      [tank1x, tank1y, tank1angle, tank1sensangle, 
+      [tank1x, tank1y, tank1angle, tank1sensangle,
        tank1flags, tank1sensors],
       ...],
      ...]]
 
 If file descriptor 3 is open for writes, it also outputs the results of
-the round to fd3.  
+the round to fd3.
 
 
 ### rank.awk
@@ -70,4 +70,20 @@ Accepts form input and writes a tank.
 
 
 
+Problems
+========
+
+Nothing uploads
+---------------
+
+The user running the web server has to be able to write to the directory serving the CGI.
+Yes, I realize this is a terrible design. Please feel encouraged to submit a merge request.
+
+
+Only sensors upload
+-------------------
+
+The user running the web server has to be able to write to the directory serving the CGI.
+Not just the directory with the tank token.
+Yes, I realize this is a terrible design. Please feel encouraged to submit a merge request.
 

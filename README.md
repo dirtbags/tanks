@@ -12,8 +12,8 @@ Documentation
 -------------
 
 * [Homepage](https://dirtbags.github.io/tanks/)
-* [History](doc/history.md)
-* [Running](doc/running.md)
+* [History](docs/history.md)
+* [Running](docs/running.md)
 
 
 Author
