@@ -7,6 +7,7 @@ import (
 	"time"
 	"strings"
 	"io/ioutil"
+	"encoding/json"
 )
 
 type sensor struct {
@@ -17,6 +18,7 @@ type sensor struct {
 }
 
 type Tank struct {
+	dna []int
 	color string
 	sensors [10]sensor
 	program []string
@@ -134,6 +136,7 @@ func program_of_dna(dna []int) []string {
 		n -= 720
 		
 		// Stack.
+		// XXX: This doesn't seem right, we shouldn't see a ton of "} } }" at the end
 		ret = append(ret, "{")
 		stacks = append(stacks, (n + 1) % (len(dna) - i))
 	}
@@ -147,7 +150,7 @@ func program_of_dna(dna []int) []string {
 }
 
 func tank_of_dna(dna []int) Tank {
-	ret := Tank{}
+	ret := Tank{dna: dna}
 	ret.color, dna = color_of_dna(dna)
 	for i := 0; i < len(ret.sensors); i += 1 {
 		ret.sensors[i], dna = sensor_of_dna(dna)
@@ -176,6 +179,9 @@ func (t Tank) Write(num int, dir string) {
 		)
 	}
 	twrite(num, "program", strings.Join(t.program, " "))
+	
+	s, _ := json.Marshal(t.dna)
+	twrite(num, "dna", string(s))
 }
 
 func init() {
@@ -183,7 +189,7 @@ func init() {
 }
 
 func main() {
-	d := make_dna(20)
-	p := program_of_dna(d)
-	fmt.Println(p)
+	d := make_dna(200)
+	t := tank_of_dna(d)
+	t.Write(0, ".")
 }
