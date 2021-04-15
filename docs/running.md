@@ -9,9 +9,9 @@ and I would love it if someone proposed a merge to clearly illustrate how to run
 When I spin up a new tanks game,
 typically I run something like:
 
-    while sleep 60; do ./round.sh */; done
+    while sleep 60; do ./run-tanks */; done
 
-This assumes all your tanks directories are in the same place as `round.sh`.
+This assumes all your tanks directories are in the same place as `run-tanks`.
 
 
 
@@ -24,7 +24,7 @@ hodgepodge of C, Bourne shell, and awk, but at least each piece is
 fairly simple to audit.
 
 
-### round.sh tank1 tank2 ...
+### run-tanks tank1 tank2 ...
 
 Runs a single round, awards points with rank.awk, and creates a new
 summary.html with summary.awk.  This is the main interface that you want
