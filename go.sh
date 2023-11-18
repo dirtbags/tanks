@@ -1,14 +1,16 @@
-#! /bin/sh
+#!/bin/sh
 
 cd $(dirname $0)/../www
 
+export BASE_PATH=/tanks/www/state/
+
 (
-  s6-tcpserver -u $(id -u www) -g $(id -g www) 0.0.0.0 80 /usr/bin/eris -c -.
+  httpd-foreground
 ) &
 
 (
   while true; do
-    ../bin/round.sh */
+    ../bin/round.sh /tanks/www/state/*
     sleep 60
   done
 ) &

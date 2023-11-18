@@ -285,7 +285,8 @@ main(int argc, char *argv[])
 
 		snprintf(path, sizeof(path), "%s%s/", BASE_PATH, token);
 		if (-1 == stat(path, &st))
-			return croak(422, "Invalid token");
+			//return croak(422, "Invalid token");
+			return croak(422, path);
 		if (!S_ISDIR(st.st_mode))
 			return croak(422, "Invalid token");
 		for (i = 0; entries[i].name; i += 1) {

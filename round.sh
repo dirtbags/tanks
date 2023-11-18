@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 if [ "$#" -gt 0 ]; then
     tanks="$@"
