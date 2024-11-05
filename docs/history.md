@@ -69,7 +69,7 @@ of the math.  That wasn't bad, it meant we could run a reasonably-sized
 game at one turn per minute, which we knew from past experience was
 about the right rate.  But it required a USB thumb drive to hold Python,
 and when we used the Python Forf implementation, the run-time shot up to
-several minutes.  I began this C port while Adam Glasgall, another fool
+several minutes.  I began this C port while Anna Glasgall, another fool
 on the previously-mentioned IRC channel, started work on a C version of
 a Forf interpreter.
 
