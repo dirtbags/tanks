@@ -1,5 +1,4 @@
-#ifndef __CTANKS_H__
-#define __CTANKS_H__
+#pragma once
 
 /* τ = 2π */
 #define TAU 6.28318530717958647692
@@ -107,6 +106,3 @@ int tank_get_sensor(struct tank *tank, int sensor_num);
 
 /** Set the LED state */
 void tank_set_led(struct tank *tank, int active);
-
-
-#endif /* __CTANKS_H__ */

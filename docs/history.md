@@ -52,7 +52,7 @@ to accept a scaled-down version of PostScript.  The IRC channel we
 frequent collectively agreed to give this new language the derisive name
 "Forf", which should ideally be followed by punching someone after it is
 spoken aloud.  I wrote a Python implementation of Forf, which was slow,
-and then Adam Glasgall wrote a C implementation, which was quick.
+and then Anna Glasgall wrote a C implementation, which was quick.
 
 I decided to take Tanks to Def Con in July 2010, and just for bragging
 rights, to have it run on an Asus WL-500gU.  This is a $50 device with a

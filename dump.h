@@ -1,4 +1,4 @@
-#ifndef __DUMP_H__
+#pragma once
 
 #include <stdio.h>
 
@@ -28,5 +28,3 @@
 #define TEK_line(x1, y1, x2, y2) TEK("\035%c%c%c%c%c%c%c%c", TEK_coord(x1, y1), TEK_coord(x2, y2))
 #define TEK_point(x, y) TEK("\034%c%c%c%c", TEK_coord(x, y))
 #define TEK_text(x, y, s) TEK("\035%c%c%c%c\037%s", TEK_coord(x, y), s)
-
-#endif

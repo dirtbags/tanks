@@ -368,38 +368,11 @@ ft_read_tank(struct forftank         *ftank,
 void
 print_header(FILE              *f,
              struct tanks_game *game,
-             struct forftank   *forftanks,
-             struct tank       *tanks,
-             int                ntanks)
+             int seed)
 {
-  int i, j;
-
-  fprintf(f, "[[%d,%d],[\n",
-         (int)game->size[0], (int)game->size[1]);
-  for (i = 0; i < ntanks; i += 1) {
-    fprintf(f, " [\"%s\",[", forftanks[i].color);
-    for (j = 0; j < TANK_MAX_SENSORS; j += 1) {
-      struct sensor *s = &(tanks[i].sensors[j]);
-
-      if (! s->range) {
-        fprintf(f, "0,");
-      } else {
-        fprintf(f, "[%d,%.2f,%.2f,%d],",
-                (int)(s->range),
-                s->angle,
-                s->width,
-                s->turret);
-      }
-    }
-    fprintf(f, "]],\n");
-  }
-  fprintf(f, "],[\n");
-}
-
-void
-print_footer(FILE *f)
-{
-  fprintf(f, "]]\n");
+  fprintf(f, "{\n");
+  fprintf(f, "  \"seed\": %d,\n", seed);
+  fprintf(f, "  \"field\": [%d,%d],\n", (int)game->size[0], (int)game->size[1]);
 }
 
 void
@@ -408,23 +381,30 @@ print_rounds(FILE *f,
              struct tank       *tanks,
              int                ntanks)
 {
-  int i;
   int alive;
+
+  fprintf(f, "  \"rounds\": [\n");
 
   /* Run rounds */
   alive = ntanks;
-  for (i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
-    int j;
+  for (int i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
+    if (i > 0) {
+      fprintf(f, ",\n");
+    }
 
     tanks_run_turn(game, tanks, ntanks);
-    fprintf(f, "[\n");
+    fprintf(f, "    [");
     alive = ntanks;
-    for (j = 0; j < ntanks; j += 1) {
+    for (int j = 0; j < ntanks; j += 1) {
       struct tank *t = &(tanks[j]);
 
       int k;
       int flags   = 0;
       int sensors = 0;
+
+      if (j > 0) {
+        fprintf(f, ",");
+      }
 
       for (k = 0; k < TANK_MAX_SENSORS; k += 1) {
         if (t->sensors[k].triggered) {
@@ -441,7 +421,7 @@ print_rounds(FILE *f,
         alive -= 1;
         flags |= 4;
       }
-      fprintf(f, " [%d,%d,%.2f,%.2f,%d,%d],\n",
+      fprintf(f, "[%d,%d,%.2f,%.2f,%d,%d]",
               (int)t->position[0],
               (int)(t->position[1]),
               t->angle,
@@ -449,8 +429,10 @@ print_rounds(FILE *f,
               flags,
               sensors);
     }
-    fprintf(f, "],\n");
+    fprintf(f, "]");
   }
+
+  fprintf(f, "\n  ],\n");
 }
 
 void
@@ -459,18 +441,56 @@ print_standings(FILE            *f,
                 struct tank     *tanks,
                 int              ntanks)
 {
-  int i;
 
-  for (i = 0; i < ntanks; i += 1) {
-    /* &tank path cause &killer parse_error_pos lasterr */
-    fprintf(f, "%p\t%s\t%s\t%p\t%d\t%s\n",
-            &(tanks[i]),
-            ftanks[i].path,
-            tanks[i].cause_death,
-            tanks[i].killer,
-            ftanks[i].error_pos,
-            forf_error_str[ftanks[i].env.error]);
+  fprintf(f, "  \"tanks\": [\n");
+  for (int i = 0; i < ntanks; i += 1) {
+    int killer = -1;
+    for (int j = 0; j < ntanks; j += 1) {
+      if (tanks[i].killer == &(tanks[j])) {
+        killer = j;
+      }
+    }
+
+    if (i > 0) {
+      fprintf(f, ",\n");
+    }
+    fprintf(f, "    {\n");
+    fprintf(f, "      \"color\": \"%s\",\n", ftanks[i].color);
+    fprintf(f, "      \"path\": \"%s\",\n", ftanks[i].path);
+    fprintf(f, "      \"death\": \"%s\",\n", tanks[i].cause_death);
+    fprintf(f, "      \"killer\": %d,\n", killer);
+    fprintf(f, "      \"errorPos\": %d,\n", ftanks[i].error_pos);
+    fprintf(f, "      \"error\": \"%s\",\n", forf_error_str[ftanks[i].env.error]);
+    fprintf(f, "      \"sensors\": [\n");
+    for (int j = 0; j < TANK_MAX_SENSORS; j += 1) {
+      struct sensor *s = &(tanks[i].sensors[j]);
+
+      if (j > 0) {
+        fprintf(f, ",\n");
+      }
+      
+      if (! s->range) {
+        fprintf(f, "        null");
+      } else {
+        fprintf(f, "        {\"range\":%d,\"angle\":%.2f,\"width\":%.2f,\"turret\":%s}",
+                (int)(s->range),
+                s->angle,
+                s->width,
+                s->turret?"true":"false");
+      }
+    }
+    fprintf(f, "\n      ]");
+    fprintf(f, "\n    }");
   }
+
+  fprintf(f, "\n  ],\n");
+}
+
+void
+print_footer(FILE *f)
+{
+  fprintf(f, "  \"\": null\n"); // sentry, so everything prior can end with a comma
+  fprintf(f, "}\n");
 }
 
 int
@@ -483,6 +503,7 @@ main(int argc, char *argv[])
   int                     order[MAX_TANKS];
   int                     ntanks = 0;
   int                     i;
+  int seed;
 
   lenv[0].name = NULL;
   lenv[0].proc = NULL;
@@ -495,14 +516,18 @@ main(int argc, char *argv[])
   /* We only need slightly random numbers */
   {
     char *s    = getenv("SEED");
-    int   seed = atoi(s?s:"");
+    seed = atoi(s?s:"");
 
     if (! seed) {
       seed = getpid();
     }
 
     srand(seed);
-    fprintf(stdout, "// SEED=%d\n", seed);
+  }
+
+  if ((argc < 2) || (argv[1][0] == '-')) {
+    fprintf(stderr, "usage: %s TANKDIR [TANKDIR...]\n", argv[0]);
+    return 1;
   }
 
   /* Every argument is a tank directory */
@@ -513,11 +538,6 @@ main(int argc, char *argv[])
                      argv[i])) {
       ntanks += 1;
     }
-  }
-
-  if (0 == ntanks) {
-    fprintf(stderr, "No usable tanks!\n");
-    return 1;
   }
 
   /* Calculate the size of the game board */
@@ -566,24 +586,10 @@ main(int argc, char *argv[])
     }
   }
 
-  print_header(stdout, &game, myftanks, mytanks, ntanks);
+  print_header(stdout, &game, seed);
   print_rounds(stdout, &game, mytanks, ntanks);
+  print_standings(stdout, myftanks, mytanks, ntanks);
   print_footer(stdout);
-
-  /* Output standings to fd3.
-  *
-  * fd 3 is normally closed, so this won't normally do anything.
-  * To output to fd3 from the shell, you'll need to do something like this:
-  *
-  *     ./run-tanks 3>standing
-  **/
-  {
-    FILE *standings = fdopen(3, "w");
-
-    if (standings) {
-      print_standings(standings, myftanks, mytanks, ntanks);
-    }
-  }
 
   return 0;
 }

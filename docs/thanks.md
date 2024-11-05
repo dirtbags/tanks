@@ -6,7 +6,7 @@ title: thanks
 * Paul Ferrell:          Initial implementation
 * Aaron McPhall:         Math optimizations
 * Nick Moffitt:          Suggestion to use FORTH-like language
-* Adam Glasgall:         C Forf prototype
+* Anna Glasgall:         C Forf prototype
 * Adam Thomas:           Various patches
 * Various Australians:   Creation of some mind-blowing tanks
 * Alyssa Milburn:        JS Tanks, Tank Debugger, many more other helpful contributions

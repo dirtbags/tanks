@@ -1,5 +1,4 @@
-#ifndef __FORF_H__
-#define __FORF_H__
+#pragma once
 
 #include <stdio.h>
 #include <inttypes.h>
@@ -146,5 +145,3 @@ int forf_eval_once(struct forf_env *env);
 
 /** Evaluate the entire command stack */
 int forf_eval(struct forf_env *env);
-
-#endif
