@@ -2,16 +2,6 @@
 *#
 *.o
 
-round-*.html
-next-round
-points
 forftanks
-
-designer.cgi
-upload.cgi
-
-forf.html
-summary.html
-designer.html
-intro.html
-procs.html
+rounds
+tanks

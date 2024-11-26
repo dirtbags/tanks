@@ -445,9 +445,13 @@ print_standings(FILE            *f,
   fprintf(f, "  \"tanks\": [\n");
   for (int i = 0; i < ntanks; i += 1) {
     int killer = -1;
+    int kills = 0;
     for (int j = 0; j < ntanks; j += 1) {
       if (tanks[i].killer == &(tanks[j])) {
         killer = j;
+      }
+      if (tanks[j].killer == &(tanks[i])) {
+        kills += 1;
       }
     }
 
@@ -459,6 +463,7 @@ print_standings(FILE            *f,
     fprintf(f, "      \"path\": \"%s\",\n", ftanks[i].path);
     fprintf(f, "      \"death\": \"%s\",\n", tanks[i].cause_death);
     fprintf(f, "      \"killer\": %d,\n", killer);
+    fprintf(f, "      \"kills\": %d,\n", kills);
     fprintf(f, "      \"errorPos\": %d,\n", ftanks[i].error_pos);
     fprintf(f, "      \"error\": \"%s\",\n", forf_error_str[ftanks[i].env.error]);
     fprintf(f, "      \"sensors\": [\n");

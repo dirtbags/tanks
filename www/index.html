@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Tanks</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="designer.mjs" type="module"></script>
+  </head>
+  <body>
+    <h1>Tanks</h1>
+
+    <h2>Upload a tank</h2>
+    <form id="upload">
+      <fieldset>
+        <legend><input type="text" name="name" placeholder="My tank name" required></legend>
+        <fieldset>
+          <legend>Program</legend>
+          <textarea name="program">30 40 set-speed!
+0 sensor? { fire! } if
+          </textarea>
+        </fieldset>
+
+        <fieldset>
+          <legend>Sensors</legend>
+          <table id="sensors">
+            <thead>
+              <tr>
+                <td>№</td>
+                <td>Range</td>
+                <td>Angle</td>
+                <td>Width</td>
+                <td>Turret?</td>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </fieldset>
+
+        <fieldset id="preview">
+          <legend>Preview</legend>
+          <div>
+            <canvas id="design"></canvas>
+          </div>
+        </fieldset>
+
+        <div>
+          <div>
+            <label>ID:
+              <input type="text" name="id" placeholder="ID provided by game owner" required>
+            </label>
+          </div>
+
+          <div>
+            <label>Author:
+              <input type="text" name="author" placeholder="Your name" required>
+            </label>
+          </div>
+
+          <div>
+            <input type="color" name="color" value="#cccccc" required>
+          </div>
+
+          <input type="submit" value="Submit">
+
+          <div id="debug"></div>
+        </div>
+
+      </fieldset>
+    </form>
+      
+    
+    <h2>Upload using curl</h2>
+    <p>
+      You can use <samp>curl</samp> to upload your tank,
+      if you want.
+    </p>
+    <p>
+      The server does no syntax checking on what you upload.
+      You'll have to wait until the next round to see if you made a mistake.
+    </p>
+    <pre lang="sh">
+#! /bin/sh
+
+curl -X PUT -d '<slot name="name">fred the tank</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>name
+curl -X PUT -d '<slot name="color">#ff0000</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>color
+curl -X PUT -d '<slot name="sensor0">50 0 10 1</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor0
+curl -X PUT -d '<slot name="sensor1">360 0 5 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor1
+curl -X PUT -d '<slot name="sensor2">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor2
+curl -X PUT -d '<slot name="sensor3">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor3
+curl -X PUT -d '<slot name="sensor4">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor4
+curl -X PUT -d '<slot name="sensor5">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor5
+curl -X PUT -d '<slot name="sensor6">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor6
+curl -X PUT -d '<slot name="sensor7">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor7
+curl -X PUT -d '<slot name="sensor8">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor8
+curl -X PUT -d '<slot name="sensor9">0 0 0 0</slot>' <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>sensor9
+curl -X PUT --data-binary @- <slot name="apiurl">https://server/tanks/a1b2c3d4/</slot>program &lt;&lt;'EOD'
+<slot name="program">20 30 set-speed!</slot>
+EOD
+    </pre>
+</html>

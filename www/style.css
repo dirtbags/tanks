@@ -7,9 +7,7 @@ html {
 body {
     font-family: sans-serif;
     color: #fff;
-    margin: 50px 0 0 110px;
     padding: 10px;
-    max-width: 700px;
 }
 
 /**** heading ****/
@@ -17,15 +15,8 @@ body {
 h1:first-child {
     text-transform: lowercase;
     font-size: 1.6em;
-    padding: 3px;
     color: #2a2;
-    margin: 0 0 1em 70px;
-}
-
-h1:first-child:before {
-   color: #fff;
-   letter-spacing: -0.1em;
-   content: "Dirtbags: ";
+    border-bottom: #2a2 solid 2px;
 }
 
 /*** left side bar ***/
@@ -75,6 +66,28 @@ nav li .active {
   border-right: 4px solid #444;
 }
 
+/**** designer ****/
+#upload fieldset {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    align-items: flex-start;
+}
+
+#upload [name="program"] {
+    min-width: 25em;
+    min-height: 15em;
+}
+
+#upload fieldset fieldset {
+    border-color: #666;
+}
+
+#preview {
+    background: #333;
+    display: flex;
+    justify-content: center;
+}
 
 /**** body ****/
 
