@@ -1,20 +1,5 @@
-/*
- * This software has been authored by an employee or employees of Los
- * Alamos National Security, LLC, operator of the Los Alamos National
- * Laboratory (LANL) under Contract No. DE-AC52-06NA25396 with the U.S.
- * Department of Energy.  The U.S. Government has rights to use,
- * reproduce, and distribute this software.  The public may copy,
- * distribute, prepare derivative works and publicly display this
- * software without charge, provided that this Notice and any statement
- * of authorship are reproduced on all copies.  Neither the Government
- * nor LANS makes any warranty, express or implied, or assumes any
- * liability or responsibility for the use of this software.  If
- * software is modified to produce derivative works, such modified
- * software should be clearly marked, so as not to confuse it with the
- * version available from LANL.
- */
-
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -40,6 +25,7 @@ struct forftank {
   char             color[8];    /* "#ff0088" */
   char             name[50];
   char            *path;
+  ino_t inode;
 
   struct forf_stack  _prog;
   struct forf_value  _progvals[CSTACK_SIZE];
@@ -57,18 +43,18 @@ void
 forf_print_val(struct forf_value *val)
 {
   switch (val->type) {
-    case forf_type_number:
-      printf("%ld", val->v.i);
-      break;
-    case forf_type_proc:
-      printf("[proc %p]", val->v.p);
-      break;
-    case forf_type_stack_begin:
-      printf("{");
-      break;
-    case forf_type_stack_end:
-      printf("}");
-      break;
+  case forf_type_number:
+    printf("%ld", val->v.i);
+    break;
+  case forf_type_proc:
+    printf("[proc %p]", val->v.p);
+    break;
+  case forf_type_stack_begin:
+    printf("{");
+    break;
+  case forf_type_stack_end:
+    printf("}");
+    break;
   }
 }
 
@@ -174,8 +160,8 @@ forf_proc_random(struct forf_env *env)
   long max = forf_pop_num(env);
   
   if (max < 1) {
-  	forf_push_num(env, 0);
-	return;
+    forf_push_num(env, 0);
+    return;
   }
 
   forf_push_num(env, rand() % max);
@@ -244,7 +230,7 @@ ft_run_tank(struct tank *tank, struct forftank *ftank)
   ret = forf_eval(&ftank->env);
   if (! ret) {
     fprintf(stderr, "Error in %s: %s\n",
-            ftank->name,
+            ftank->path,
             forf_error_str[ftank->env.error]);
   }
 }
@@ -340,10 +326,20 @@ ft_read_tank(struct forftank         *ftank,
 
   ftank->path = path;
 
+  /* Store inode */
+  {
+    struct stat s;
+    if (-1 == stat(path, &s)) {
+      ftank->inode = -1;
+    } else {
+      ftank->inode = s.st_ino;
+    }
+  }
+
   /* What is your name? */
   ret = ft_read_file(ftank->name, sizeof(ftank->name), path, "name");
   if (! ret) {
-    strncpy(ftank->name, path, sizeof(ftank->name));
+    snprintf(ftank->name, sizeof(ftank->name), "i:%lx", ftank->inode);
   }
 
   /* What is your quest? */
@@ -459,8 +455,9 @@ print_standings(FILE            *f,
       fprintf(f, ",\n");
     }
     fprintf(f, "    {\n");
+    fprintf(f, "      \"inode\": %ld,\n", ftanks[i].inode);
     fprintf(f, "      \"color\": \"%s\",\n", ftanks[i].color);
-    fprintf(f, "      \"path\": \"%s\",\n", ftanks[i].path);
+    fprintf(f, "      \"name\": \"%s\",\n", ftanks[i].name);
     fprintf(f, "      \"death\": \"%s\",\n", tanks[i].cause_death);
     fprintf(f, "      \"killer\": %d,\n", killer);
     fprintf(f, "      \"kills\": %d,\n", kills);

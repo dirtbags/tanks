@@ -15,15 +15,16 @@ export class Tank {
             if (! s) {
                 this.sensors[i] = [0,0,0,0]
             } else {
+                let r = s.range
                 // r, angle, width, turret
-                this.sensors[i] = [
-                    s[0],       // Center angle
-                    s[1] - s[2]/2, // Left border angle
-                    s[1] + s[2]/2, // Right border angle
-                    s[3]?1:0,      // On turret?
-                ]
-                if (s[0] > this.maxlen) {
-                    this.maxlen = s[0]
+                this.sensors[i] = {
+                    range: s.range,
+                    beg: s.angle - s.width/2,
+                    end: s.angle + s.width/2,
+                    turret: s.turret,
+                }
+                if (s.range > this.maxlen) {
+                    this.maxlen = s.range
                 }
             }
         }
@@ -92,8 +93,11 @@ export class Tank {
         this.ctx.lineWidth = 1
         for (let i in this.sensors) {
             var s = this.sensors[i]
-            var adj = this.turret * s[3]
 
+            this.ctx.save()
+            if (s.turret) {
+                this.ctx.rotate(this.turret)
+            }
             if (this.sensor_state & (1 << i)) {
                 // Sensor is triggered
                 this.ctx.strokeStyle = "#000"
@@ -102,9 +106,10 @@ export class Tank {
             }
             this.ctx.beginPath()
             this.ctx.moveTo(0, 0)
-            this.ctx.arc(0, 0, s[0], s[1] + adj, s[2] + adj, false)
+            this.ctx.arc(0, 0, s.range, s.beg, s.end, false)
             this.ctx.closePath()
             this.ctx.stroke()
+            this.ctx.restore()
         }
 
         this.ctx.restore()

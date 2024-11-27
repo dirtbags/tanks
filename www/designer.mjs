@@ -6,6 +6,7 @@ const Second = 1000 * Millisecond
 const Minute = 60 * Second
 const TankRPM = 1
 const TurretRPM = 4
+const FPS = 12
 
 function deg2rad(angle) {
     return angle*Math.TAU/360;
@@ -21,12 +22,12 @@ function update(ctx) {
         let width = document.querySelector(`[name=s${i}w]`).value
         let turret = document.querySelector(`[name=s${i}t]`).checked
             
-        sensors[i] = [
-            Math.min(range, 100),
-            deg2rad(angle % 360),
-            deg2rad(width % 360),
-            turret,
-        ]
+        sensors[i] = {
+            range: Math.min(range, 100),
+            angle: deg2rad(angle % 360),
+            width: deg2rad(width % 360),
+            turret: turret,
+        }
     }
 
     let tankRevs = -TankRPM * (Date.now() / Minute)
@@ -81,16 +82,34 @@ function formSubmit(event) {
     }
 
     // Upload files
+    let pending = 0
+    let errors = 0
+    let begin = performance.now()
     for (let k in files) {
         let url = new URL(k, apiURL)
         let opts = {
             method: "PUT",
             body: files[k],
         }
+        pending += 1
         fetch(url, opts)
         .then(resp => {
+            pending -= 1
             if (!resp.ok) {
-                console.error("OH NO")
+                errors += 1
+            }
+            if (pending == 0) {
+                let duration = (performance.now() - begin).toPrecision(2)
+                let debug = document.querySelector("#debug")
+                if (debug) {
+                    let msg = `tank uploaded in ${duration}ms`
+                    if (errors > 0) {
+                        msg = msg + `; ${errors} errors`
+                    }
+                    debug.textContent = msg
+
+                    setTimeout(() => debug.textContent = "", 2 * Second)
+                }
             }
         })
     }
@@ -145,7 +164,7 @@ function init() {
     }
 
     update(ctx)
-    setInterval(() => update(ctx), Second / 20)
+    setInterval(() => update(ctx), Second / FPS)
 }
 
 init()

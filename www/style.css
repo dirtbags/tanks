@@ -185,20 +185,14 @@ dd {
     border: 2px solid green;
 }
 
-.solved {
-    text-decoration: line-through;
+table#results {
+    border-collapse: collapse;
 }
-
-table.pollster {
-    margin-left: 5em;
+table#results td {
+    padding: 0.4em 1em;
 }
-
-table.pollster td {
-    padding: 2px 1em 2px 5px;
-}
-
-table.pollster thead {
-    font-weight: bold;
+table#results tr:nth-child(even) {
+    background-color: #343;
 }
 
 .swatch {
