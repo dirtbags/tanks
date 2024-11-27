@@ -109,6 +109,7 @@ a:hover {
 
 
 h1, h2, h3 {
+    background-color: #222a;
     color: #999;
     letter-spacing: -0.05em;
     clear: both;

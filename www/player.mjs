@@ -45,6 +45,12 @@ export class Player {
         let frame = this.rounds[this.frameno]
         if (!frame) {
             this.stop()
+            setTimeout(
+                () => {
+                    this.start()
+                },
+                2 * Second,
+            )
             return
         }
 
