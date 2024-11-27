@@ -37,6 +37,7 @@ export class Player {
     stop() {
         if (this.loop_id) {
             clearInterval(this.loop_id)
+            this.loop_id = null
         }
     }
 
@@ -49,7 +50,7 @@ export class Player {
                 () => {
                     this.start()
                 },
-                2 * Second,
+                4 * Second,
             )
             return
         }
