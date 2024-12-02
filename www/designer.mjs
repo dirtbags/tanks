@@ -12,6 +12,14 @@ function deg2rad(angle) {
     return angle*Math.TAU/360;
 }
 
+function debug(text) {
+    let el = document.querySelector("#debug")
+    if (el) {
+        el.textContent = text
+        setTimeout(() => el.textContent = "", 2 * Second)
+    }
+}
+
 function update(ctx) {
     let color = document.querySelector("[name=color]").value
     let sensors = []
@@ -45,7 +53,7 @@ function update(ctx) {
     tank.draw_tank()
 }
 
-function formSubmit(event) {
+async function formSubmit(event) {
     event.preventDefault()
 
     let formData = new FormData(event.target)
@@ -70,15 +78,29 @@ function formSubmit(event) {
     let id = formData.get("id")
     let apiURL = new URL(`tanks/${id}/`, location)
 
-    // Fill slots
-    for (let k in files) {
-        let v = files[k]
-        for (let e of document.querySelectorAll(`slot[name="${k}"]`)) {
-            e.textContent = v
-        }
-    }
-    for (let e of document.querySelectorAll("slot[name=apiurl]")) {
-        e.textContent = apiURL
+    // Did the submit button have a "data-script" attribute?
+    if (event.submitter.dataset.script !== undefined) {
+        await navigator.clipboard.writeText(`#! /bin/sh
+
+curl -X PUT -d '${files.name}' ${apiURL}name
+curl -X PUT -d '${files.color}' ${apiURL}color
+curl -X PUT -d '${files.author}' ${apiURL}author
+curl -X PUT -d '${files.sensor0}' ${apiURL}sensor0
+curl -X PUT -d '${files.sensor1}' ${apiURL}sensor1
+curl -X PUT -d '${files.sensor2}' ${apiURL}sensor2
+curl -X PUT -d '${files.sensor3}' ${apiURL}sensor3
+curl -X PUT -d '${files.sensor4}' ${apiURL}sensor4
+curl -X PUT -d '${files.sensor5}' ${apiURL}sensor5
+curl -X PUT -d '${files.sensor6}' ${apiURL}sensor6
+curl -X PUT -d '${files.sensor7}' ${apiURL}sensor7
+curl -X PUT -d '${files.sensor8}' ${apiURL}sensor8
+curl -X PUT -d '${files.sensor9}' ${apiURL}sensor9
+curl -X PUT --data-binary @- ${apiURL}program <<'EOD'
+${files.program}
+EOD
+`)
+        debug("Upload script copied to clipboard.")
+        return
     }
 
     // Upload files
@@ -100,16 +122,11 @@ function formSubmit(event) {
             }
             if (pending == 0) {
                 let duration = (performance.now() - begin).toPrecision(2)
-                let debug = document.querySelector("#debug")
-                if (debug) {
-                    let msg = `tank uploaded in ${duration}ms`
-                    if (errors > 0) {
-                        msg = msg + `; ${errors} errors`
-                    }
-                    debug.textContent = msg
-
-                    setTimeout(() => debug.textContent = "", 2 * Second)
+                let msg = `tank uploaded in ${duration}ms`
+                if (errors > 0) {
+                    msg = msg + `; ${errors} errors`
                 }
+                debug(msg)
             }
         })
     }

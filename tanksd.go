@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"slices"
 	"time"
 )
 
@@ -56,6 +57,11 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if !slices.Contains(validFilenames, name) {
+		http.Error(w, "Invalid filename", http.StatusNotFound)
+		return
+	}
+
 	tankDir := path.Join(ts.dir, id)
 	if tankDir == ts.dir {
 		http.Error(w, "Invalid tank ID", http.StatusBadRequest)
@@ -74,7 +80,7 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "file written")
+	fmt.Fprintf(w, "%s/%s: written\n", id, name)
 }
 
 func (ts *TankState) WriteRound(now time.Time, round []byte) error {
