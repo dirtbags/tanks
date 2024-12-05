@@ -122,7 +122,6 @@ class Replay {
         }
 
         let tbody = this.stats.querySelector("tbody")
-        console.log(this.stats, tbody)
         tbody.replaceChildren()
 
         let byKills = Object.keys(TankNames)
@@ -177,7 +176,6 @@ class Replay {
         let game = this.games[fn]
 
         this.player.load(game)
-        console.log(fn)
 
         this.dateOutput.value = dateOfFn(fn)
 

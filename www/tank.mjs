@@ -55,6 +55,8 @@ export class Tank {
         this.ctx.translate(this.x, this.y)
         this.ctx.rotate(this.rotation)
 
+        // If the cannon was fired in the same turn we were shot,
+        // render the laser for one frame.
         if (this.fire == 5) {
             this.ctx.save()
             this.ctx.rotate(this.turret)
@@ -145,7 +147,7 @@ export class Tank {
     }
 
     draw_cannon() {
-        this.ctx.fillStyle = ("hsl(0, 100%, 100%, " + this.fire/5 + ")")
+        this.ctx.fillStyle = ("hsl(0, 100%, 50%, " + this.fire/5 + ")")
         this.ctx.fillRect(0, -1, 45, 2)
     }
 

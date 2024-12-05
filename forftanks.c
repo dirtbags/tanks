@@ -275,6 +275,19 @@ void ft_read_sensors(struct tank *tank, char *path) {
   }
 }
 
+// Crudely clean a string for json output
+void clean(char *s) {
+  for (; *s; s++) {
+    switch (*s) {
+    case '\0' ... '\037':
+    case '"':
+    case '\\':
+      *s = '\0';
+      return;
+    }
+  }
+}
+
 int ft_read_tank(struct forftank *ftank, struct tank *tank,
                  struct forf_lexical_env *lenv, char *path) {
   int ret;
@@ -296,6 +309,7 @@ int ft_read_tank(struct forftank *ftank, struct tank *tank,
   if (!ret) {
     snprintf(ftank->name, sizeof(ftank->name), "i:%x", ftank->uid);
   }
+  clean(ftank->name);
 
   /* What is your quest? */
   ft_tank_init(ftank, tank, lenv);
@@ -312,6 +326,7 @@ int ft_read_tank(struct forftank *ftank, struct tank *tank,
   if (!ret) {
     strncpy(ftank->color, "#808080", sizeof(ftank->color));
   }
+  clean(ftank->color);
 
   return 1;
 }
