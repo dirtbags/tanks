@@ -154,6 +154,9 @@ class Replay {
             if (TotalDeaths[uid] == 0) {
                 award.push("invincible")
             }
+            if (TotalDeaths[uid] < ngames*0.33) {
+                award.push("stealthy")
+            }
             if (TotalDeaths[uid] == ngames) {
                 award.push("wasted")
             }
