@@ -110,18 +110,10 @@ dl {
 }
 dt {
     white-space: pre;
-    background-color: #333;
-    padding: 5px;
-    border: 2px solid green;
-    border-bottom: none;
     font-weight: bold;
 }
-
 dd {
-    border: 2px solid green;
-    margin: 0px;
-    padding: 5px;
-    background-color: #282828;
+    margin-left: 2em;
 }
 
 
