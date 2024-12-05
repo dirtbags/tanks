@@ -46,7 +46,7 @@ and use the following example tank.  This tank will
 move around, turn the turret, and fire if there's something in
 front of it.
 
-    Sensor 0: 50 0 7 ☑
+    Sensor 0: 50 0 7  ☑
     Sensor 1: 30 0 90 ☐
     
     get-turret 12 + set-turret!         ( Rotate turret )
@@ -54,10 +54,10 @@ front of it.
     0 sensor? { fire! } if              ( Fire if turret sensor triggered )
     1 sensor? { -50 50 set-speed! } if  ( Turn if collision sensor triggered )
 
-Obviously, this tank could be improved.  
+This tank can be improved!
 Watch other tanks in your game to get ideas about how to improve yours.
 Don't forget the [Forf manual](forf.md) and the
-[Tank procedure reference](procs.html).
+[Tank procedure reference](procs.md).
 
 ## Tank Specifications
 
