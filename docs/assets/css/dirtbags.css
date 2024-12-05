@@ -83,6 +83,7 @@ pre {
     background-color: #ccc;
     border: solid #888 2px;
     padding: 0.25em;
+    clear: both;
 }
 
 
@@ -104,6 +105,9 @@ hr {
     border: 1px solid #444;
 }
 
+dl {
+    clear: both;
+}
 dt {
     white-space: pre;
     background-color: #333;
@@ -130,11 +134,11 @@ dd {
 figure {
     margin: 0.5em 1em;
     float: right;
-    font-size: small;
-    text-align: center;
 }
 figcaption {
-    fount-style: italic;
+    font-size: small;
+    text-align: center;
+    font-style: italic;
 }
 
 .scoreboard {
