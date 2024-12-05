@@ -239,8 +239,6 @@ function start(id, game) {
         for (i in turn) {
             tanks[i].draw_tank()
         }
-
-        document.getElementById('frameid').innerHTML = idx;
     }
 
     function update() {

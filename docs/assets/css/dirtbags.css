@@ -127,11 +127,14 @@ dd {
     max-width: inherit;
 }
 
-.figure {
+figure {
     margin: 0.5em 1em;
     float: right;
     font-size: small;
     text-align: center;
+}
+figcaption {
+    fount-style: italic;
 }
 
 .scoreboard {

@@ -7,8 +7,8 @@ scripts:
 # Tanks Introduction 
 
 <figure>
-  <figcaption>"ChashTank" dominates this short round.</figcaption>
   <canvas id="shortround"></canvas>
+  <figcaption>"ChashTank" dominates this short round.</figcaption>
   <script type="text/javascript">
     start("shortround", shortround);
   </script>
@@ -34,9 +34,8 @@ description of Tanks extensions.
 ## Quick Start for the Impatient
 
 <figure>
-  <figcaption>"Crashmaster" pwns the lame default tank provided in this
-  section.</figcaption>
   <canvas id="default"></canvas>
+  <figcaption>"Crashmaster" pwns the lame default tank provided in this section.</figcaption>
   <script type="text/javascript">
     start("default", default_);
   </script>
@@ -63,8 +62,8 @@ Don't forget the [Forf manual](forf.md) and the
 ## Tank Specifications
 
 <figure>
-  <figcaption>"Ant Lion" nails "Rabbit With Gun".</figcaption>
   <canvas id="antlion"></canvas>
+  <figcaption>"Ant Lion" nails "Rabbit With Gun".</figcaption>
   <script type="text/javascript">
     start("antlion", antlion);
   </script>
