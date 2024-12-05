@@ -182,7 +182,12 @@ class Replay {
         let tbody = this.results.querySelector("tbody")
         tbody.replaceChildren()
 
-        for (let tank of game.tanks) {
+        let byKills = Object.keys(game.tanks)
+        byKills.sort((a, b) => game.tanks[a].kills - game.tanks[b].kills)
+        byKills.reverse()
+
+        for (let i of byKills) {
+            let tank = game.tanks[i]
             let tr = tbody.appendChild(document.createElement("tr"))
 
             let tdSwatch = tr.appendChild(document.createElement("td"))
