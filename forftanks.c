@@ -25,7 +25,7 @@ struct forftank {
   char             color[8];    /* "#ff0088" */
   char             name[50];
   char            *path;
-  ino_t inode;
+  unsigned int uid;
 
   struct forf_stack  _prog;
   struct forf_value  _progvals[CSTACK_SIZE];
@@ -326,20 +326,20 @@ ft_read_tank(struct forftank         *ftank,
 
   ftank->path = path;
 
-  /* Store inode */
+  /* Store uid */
   {
     struct stat s;
     if (-1 == stat(path, &s)) {
-      ftank->inode = -1;
+      ftank->uid = 0;
     } else {
-      ftank->inode = s.st_ino;
+      ftank->uid = (unsigned int)s.st_ino;
     }
   }
 
   /* What is your name? */
   ret = ft_read_file(ftank->name, sizeof(ftank->name), path, "name");
   if (! ret) {
-    snprintf(ftank->name, sizeof(ftank->name), "i:%lx", ftank->inode);
+    snprintf(ftank->name, sizeof(ftank->name), "i:%x", ftank->uid);
   }
 
   /* What is your quest? */
@@ -455,7 +455,7 @@ print_standings(FILE            *f,
       fprintf(f, ",\n");
     }
     fprintf(f, "    {\n");
-    fprintf(f, "      \"inode\": %ld,\n", ftanks[i].inode);
+    fprintf(f, "      \"uid\": %d,\n", ftanks[i].uid);
     fprintf(f, "      \"color\": \"%s\",\n", ftanks[i].color);
     fprintf(f, "      \"name\": \"%s\",\n", ftanks[i].name);
     fprintf(f, "      \"death\": \"%s\",\n", tanks[i].cause_death);

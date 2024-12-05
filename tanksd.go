@@ -84,11 +84,18 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func (ts *TankState) WriteRound(now time.Time, round []byte) error {
+	// Write new round
+	roundFn := fmt.Sprintf("%016x.json", now.Unix())
+	roundPath := path.Join(ts.roundsdir, roundFn)
+	if err := os.WriteFile(roundPath, round, 0644); err != nil {
+		return err
+	}
+
+	// Clean up and index all rounds
 	dents, err := os.ReadDir(ts.roundsdir)
 	if err != nil {
 		return err
 	}
-
 	for uint(len(dents)) > *maxrounds {
 		fn := path.Join(ts.roundsdir, dents[0].Name())
 		if err := os.Remove(fn); err != nil {
@@ -97,17 +104,15 @@ func (ts *TankState) WriteRound(now time.Time, round []byte) error {
 		dents = dents[1:]
 	}
 
-	roundFn := fmt.Sprintf("%016x.json", now.Unix())
-	roundPath := path.Join(ts.roundsdir, roundFn)
-	if err := os.WriteFile(roundPath, round, 0644); err != nil {
-		return err
-	}
-
-	rounds := make([]string, len(dents) + 1)
+	rounds := make([]string, 0, len(dents))
 	for i := 0; i < len(dents); i++ {
-		rounds[i] = dents[i].Name()
+		name := dents[i].Name()
+		switch name {
+		case "index.json":
+			continue
+		}
+		rounds = append(rounds, name)
 	}
-	rounds[len(dents)] = roundFn
 
 	roundsJs, err := json.Marshal(rounds)
 	if err != nil {

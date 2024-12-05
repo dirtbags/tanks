@@ -3,7 +3,7 @@
   <head>
     <title>Tanks</title>
     <link rel="stylesheet" href="style.css">
-    <script src="designer.mjs" type="module"></script>
+    <script src="main.mjs" type="module"></script>
   </head>
   <body>
     <h1>Tanks</h1>
@@ -11,7 +11,7 @@
     <h2>Upload a tank</h2>
     <form id="upload">
       <fieldset>
-        <legend><input type="text" name="name" placeholder="My tank name" required></legend>
+        <legend>Tank Designer</legend>
         <fieldset>
           <legend>Program</legend>
           <textarea name="program">30 40 set-speed!
@@ -44,8 +44,14 @@
 
         <div>
           <div>
-            <label>ID:
-              <input type="text" name="id" placeholder="ID provided by game owner" required>
+            <label>Token:
+              <input type="text" name="id" placeholder="Token provided by game owner" required>
+            </label>
+          </div>
+
+          <div>
+            <label>Name:
+              <input type="text" name="name" placeholder="Tank name" required>
             </label>
           </div>
 
@@ -67,5 +73,59 @@
 
       </fieldset>
     </form>
+
+    <fieldset>
+      <legend>
+        Game Replay
+      </legend>
+
+      <div>
+        <select id="game">
+          <option>latest</option>
+        </select>
+        <output id="date">moo</output>
+      </div>
+
+      <div id="game_box">
+        <canvas id="battlefield"></canvas>
+      </div>
+
+      <table id="results">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Score</th>
+            <th>Death</th>
+            <th>Killer</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+    </fieldset>
+
+    <fieldset>
+      <legend>
+        Statistics
+      </legend>
+
+      <table id="stats">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Games</th>
+            <th>Kills</th>
+            <th>Killed</th>
+            <th>Awards</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+    </fieldset>
+
   </body>
 </html>

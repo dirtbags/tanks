@@ -186,13 +186,13 @@ dd {
     border: 2px solid green;
 }
 
-table#results {
+table {
     border-collapse: collapse;
 }
-table#results td {
+table td {
     padding: 0.4em 1em;
 }
-table#results tr:nth-child(even) {
+table tr:nth-child(even) {
     background-color: #343;
 }
 

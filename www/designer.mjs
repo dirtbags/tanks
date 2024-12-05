@@ -132,7 +132,7 @@ EOD
     }
 }
 
-function init() {
+export function init() {
     let canvas = document.querySelector("#design")
     let ctx = canvas.getContext("2d")
     canvas.width = 200
@@ -184,4 +184,3 @@ function init() {
     setInterval(() => update(ctx), Second / FPS)
 }
 
-init()

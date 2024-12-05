@@ -1,7 +1,7 @@
 import {Tank} from "./tank.mjs"
 
 const Millisecond = 1
-const Second = 1000
+const Second = 1000 * Millisecond
 const FPS = 12
 
 export class Player {
@@ -75,3 +75,4 @@ export class Player {
         this.frameno += 1
     }
 }
+
