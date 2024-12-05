@@ -1,7 +1,7 @@
 # Tanks Introduction 
 
 <figure>
-  <figcaption>"ChashTank" dominates this short round.</figure>
+  <figcaption>"ChashTank" dominates this short round.</figcaption>
   <canvas id="shortround"></canvas>
   <script type="text/javascript">
     start("shortround", shortround);
