@@ -1,13 +1,13 @@
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <string.h>
+#include "ctanks.h"
+#include "dump.h"
+#include "forf.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-#include "ctanks.h"
-#include "forf.h"
-#include "dump.h"
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define MAX_TANKS 50
 #define ROUNDS 500
@@ -20,28 +20,25 @@
 #define MEMORY_SIZE 10
 
 struct forftank {
-  struct forf_env  env;
-  int              error_pos;
-  char             color[8];    /* "#ff0088" */
-  char             name[50];
-  char            *path;
+  struct forf_env env;
+  int error_pos;
+  char color[8]; /* "#ff0088" */
+  char name[50];
+  char *path;
   unsigned int uid;
 
-  struct forf_stack  _prog;
-  struct forf_value  _progvals[CSTACK_SIZE];
-  struct forf_stack  _cmd;
-  struct forf_value  _cmdvals[CSTACK_SIZE];
-  struct forf_stack  _data;
-  struct forf_value  _datavals[DSTACK_SIZE];
+  struct forf_stack _prog;
+  struct forf_value _progvals[CSTACK_SIZE];
+  struct forf_stack _cmd;
+  struct forf_value _cmdvals[CSTACK_SIZE];
+  struct forf_stack _data;
+  struct forf_value _datavals[DSTACK_SIZE];
   struct forf_memory _mem;
-  long               _memvals[MEMORY_SIZE];
+  long _memvals[MEMORY_SIZE];
 };
 
-
 #ifndef NODEBUG
-void
-forf_print_val(struct forf_value *val)
-{
+void forf_print_val(struct forf_value *val) {
   switch (val->type) {
   case forf_type_number:
     printf("%ld", val->v.i);
@@ -58,9 +55,7 @@ forf_print_val(struct forf_value *val)
   }
 }
 
-void
-forf_print_stack(struct forf_stack *s)
-{
+void forf_print_stack(struct forf_stack *s) {
   size_t pos;
 
   for (pos = 0; pos < s->top; pos += 1) {
@@ -69,9 +64,7 @@ forf_print_stack(struct forf_stack *s)
   }
 }
 
-void
-forf_dump_stack(struct forf_stack *s)
-{
+void forf_dump_stack(struct forf_stack *s) {
   printf("Stack at %p: ", s);
   forf_print_stack(s);
   printf("\n");
@@ -85,80 +78,64 @@ forf_dump_stack(struct forf_stack *s)
  */
 
 /** Has the turret recharged? */
-void
-forf_tank_fire_ready(struct forf_env *env)
-{
+void forf_tank_fire_ready(struct forf_env *env) {
   struct tank *tank = (struct tank *)env->udata;
 
   forf_push_num(env, tank_fire_ready(tank));
 }
 
 /** Fire! */
-void
-forf_tank_fire(struct forf_env *env)
-{
+void forf_tank_fire(struct forf_env *env) {
   struct tank *tank = (struct tank *)env->udata;
 
   tank_fire(tank);
 }
 
 /** Set desired speed */
-void
-forf_tank_set_speed(struct forf_env *env)
-{
-  struct tank *tank  = (struct tank *)env->udata;
-  long         right = forf_pop_num(env);
-  long         left  = forf_pop_num(env);
+void forf_tank_set_speed(struct forf_env *env) {
+  struct tank *tank = (struct tank *)env->udata;
+  long right = forf_pop_num(env);
+  long left = forf_pop_num(env);
 
   tank_set_speed(tank, left, right);
 }
 
 /** Get the current turret angle */
-void
-forf_tank_get_turret(struct forf_env *env)
-{
-  struct tank *tank  = (struct tank *)env->udata;
-  float        angle = tank_get_turret(tank);
+void forf_tank_get_turret(struct forf_env *env) {
+  struct tank *tank = (struct tank *)env->udata;
+  float angle = tank_get_turret(tank);
 
   forf_push_num(env, rad2deg(angle));
 }
 
 /** Set the desired turret angle */
-void
-forf_tank_set_turret(struct forf_env *env)
-{
-  struct tank *tank  = (struct tank *)env->udata;
-  long         angle = forf_pop_num(env);
+void forf_tank_set_turret(struct forf_env *env) {
+  struct tank *tank = (struct tank *)env->udata;
+  long angle = forf_pop_num(env);
 
   tank_set_turret(tank, deg2rad(angle));
 }
 
 /** Is a sensor active? */
-void
-forf_tank_get_sensor(struct forf_env *env)
-{
-  struct tank *tank       = (struct tank *)env->udata;
-  long         sensor_num = forf_pop_num(env);
+void forf_tank_get_sensor(struct forf_env *env) {
+  struct tank *tank = (struct tank *)env->udata;
+  long sensor_num = forf_pop_num(env);
 
   forf_push_num(env, tank_get_sensor(tank, sensor_num));
 }
 
 /** Set the LED state */
-void
-forf_tank_set_led(struct forf_env *env)
-{
-  struct tank *tank   = (struct tank *)env->udata;
-  long         active = forf_pop_num(env);
+void forf_tank_set_led(struct forf_env *env) {
+  struct tank *tank = (struct tank *)env->udata;
+  long active = forf_pop_num(env);
 
   tank_set_led(tank, active);
 }
 
 /** Pick a random number */
-void
-forf_proc_random(struct forf_env *env)
-{
+void forf_proc_random(struct forf_env *env) {
   long max = forf_pop_num(env);
-  
+
   if (max < 1) {
     forf_push_num(env, 0);
     return;
@@ -169,16 +146,15 @@ forf_proc_random(struct forf_env *env)
 
 /* Tanks lexical environment */
 struct forf_lexical_env tanks_lenv_addons[] = {
-  {"fire-ready?", forf_tank_fire_ready},
-  {"fire!", forf_tank_fire},
-  {"set-speed!", forf_tank_set_speed},
-  {"get-turret", forf_tank_get_turret},
-  {"set-turret!", forf_tank_set_turret},
-  {"sensor?", forf_tank_get_sensor},
-  {"set-led!", forf_tank_set_led},
-  {"random", forf_proc_random},
-  {NULL, NULL}
-};
+    {"fire-ready?", forf_tank_fire_ready},
+    {"fire!", forf_tank_fire},
+    {"set-speed!", forf_tank_set_speed},
+    {"get-turret", forf_tank_get_turret},
+    {"set-turret!", forf_tank_set_turret},
+    {"sensor?", forf_tank_get_sensor},
+    {"set-led!", forf_tank_set_led},
+    {"random", forf_proc_random},
+    {NULL, NULL}};
 
 /*
  *
@@ -186,68 +162,61 @@ struct forf_lexical_env tanks_lenv_addons[] = {
  *
  */
 
-int
-ft_read_file(char *ptr, size_t size, char *dir, char *fn)
-{
-  char  path[256];
-  FILE *f       = NULL;
-  int   ret;
-  int   success = 0;
+int ft_read_file(char *ptr, size_t size, char *dir, char *fn) {
+  char path[256];
+  FILE *f = NULL;
+  int ret;
+  int success = 0;
 
   do {
     snprintf(path, sizeof(path), "%s/%s", dir, fn);
     f = fopen(path, "r");
-    if (! f) break;
+    if (!f)
+      break;
 
     ret = fread(ptr, 1, size - 1, f);
     ptr[ret] = '\0';
-    if (! ret) break;
+    if (!ret)
+      break;
 
     success = 1;
   } while (0);
 
-  if (f) fclose(f);
-  if (! success) {
+  if (f)
+    fclose(f);
+  if (!success) {
     return 0;
   }
   return 1;
 }
 
-void
-ft_bricked_tank(struct tank *tank, void *ignored)
-{
+void ft_bricked_tank(struct tank *tank, void *ignored) {
   /* Do nothing, the tank is comatose */
 }
 
-void
-ft_run_tank(struct tank *tank, struct forftank *ftank)
-{
+void ft_run_tank(struct tank *tank, struct forftank *ftank) {
   int ret;
 
   /* Copy program into command stack */
   forf_stack_copy(&ftank->_cmd, &ftank->_prog);
   forf_stack_reset(&ftank->_data);
   ret = forf_eval(&ftank->env);
-  if (! ret) {
-    fprintf(stderr, "Error in %s: %s\n",
-            ftank->path,
+  if (!ret) {
+    fprintf(stderr, "Error in %s: %s\n", ftank->path,
             forf_error_str[ftank->env.error]);
   }
 }
 
-int
-ft_read_program(struct forftank         *ftank,
-                struct tank             *tank,
-                struct forf_lexical_env *lenv,
-                char                    *path)
-{
-  char  progpath[256];
+int ft_read_program(struct forftank *ftank, struct tank *tank,
+                    struct forf_lexical_env *lenv, char *path) {
+  char progpath[256];
   FILE *f;
 
   /* Open program */
   snprintf(progpath, sizeof(progpath), "%s/program", path);
   f = fopen(progpath, "r");
-  if (! f) return 0;
+  if (!f)
+    return 0;
 
   /* Parse program */
   ftank->error_pos = forf_parse_file(&ftank->env, f);
@@ -265,43 +234,33 @@ ft_read_program(struct forftank         *ftank,
   return 1;
 }
 
-void
-ft_tank_init(struct forftank         *ftank,
-             struct tank             *tank,
-             struct forf_lexical_env *lenv)
-{
+void ft_tank_init(struct forftank *ftank, struct tank *tank,
+                  struct forf_lexical_env *lenv) {
   /* Set up forf environment */
   forf_stack_init(&ftank->_prog, ftank->_progvals, CSTACK_SIZE);
   forf_stack_init(&ftank->_cmd, ftank->_cmdvals, CSTACK_SIZE);
   forf_stack_init(&ftank->_data, ftank->_datavals, DSTACK_SIZE);
   forf_memory_init(&ftank->_mem, ftank->_memvals, MEMORY_SIZE);
-  forf_env_init(&ftank->env,
-                lenv,
-                &ftank->_data,
-                &ftank->_cmd,
-                &ftank->_mem,
+  forf_env_init(&ftank->env, lenv, &ftank->_data, &ftank->_cmd, &ftank->_mem,
                 tank);
 }
 
-void
-ft_read_sensors(struct tank *tank,
-                char        *path)
-{
+void ft_read_sensors(struct tank *tank, char *path) {
   int i;
 
   for (i = 0; i < TANK_MAX_SENSORS; i += 1) {
-    int   ret;
-    char  fn[10];
-    char  s[20];
+    int ret;
+    char fn[10];
+    char s[20];
     char *p = s;
-    long  range;
-    long  angle;
-    long  width;
-    long  turret;
+    long range;
+    long angle;
+    long width;
+    long turret;
 
     snprintf(fn, sizeof(fn), "sensor%d", i);
     ret = ft_read_file(s, sizeof(s), path, fn);
-    if (! ret) {
+    if (!ret) {
       s[0] = 0;
     }
     range = strtol(p, &p, 0);
@@ -316,12 +275,8 @@ ft_read_sensors(struct tank *tank,
   }
 }
 
-int
-ft_read_tank(struct forftank         *ftank,
-             struct tank             *tank,
-             struct forf_lexical_env *lenv,
-             char                    *path)
-{
+int ft_read_tank(struct forftank *ftank, struct tank *tank,
+                 struct forf_lexical_env *lenv, char *path) {
   int ret;
 
   ftank->path = path;
@@ -338,7 +293,7 @@ ft_read_tank(struct forftank         *ftank,
 
   /* What is your name? */
   ret = ft_read_file(ftank->name, sizeof(ftank->name), path, "name");
-  if (! ret) {
+  if (!ret) {
     snprintf(ftank->name, sizeof(ftank->name), "i:%x", ftank->uid);
   }
 
@@ -354,29 +309,21 @@ ft_read_tank(struct forftank         *ftank,
 
   /* What is your favorite color? */
   ret = ft_read_file(ftank->color, sizeof(ftank->color), path, "color");
-  if (! ret) {
+  if (!ret) {
     strncpy(ftank->color, "#808080", sizeof(ftank->color));
   }
 
   return 1;
 }
 
-void
-print_header(FILE              *f,
-             struct tanks_game *game,
-             int seed)
-{
+void print_header(FILE *f, struct tanks_game *game, int seed) {
   fprintf(f, "{\n");
   fprintf(f, "  \"seed\": %d,\n", seed);
   fprintf(f, "  \"field\": [%d,%d],\n", (int)game->size[0], (int)game->size[1]);
 }
 
-void
-print_rounds(FILE *f,
-             struct tanks_game *game,
-             struct tank       *tanks,
-             int                ntanks)
-{
+void print_rounds(FILE *f, struct tanks_game *game, struct tank *tanks,
+                  int ntanks) {
   int alive;
 
   fprintf(f, "  \"rounds\": [\n");
@@ -395,7 +342,7 @@ print_rounds(FILE *f,
       struct tank *t = &(tanks[j]);
 
       int k;
-      int flags   = 0;
+      int flags = 0;
       int sensors = 0;
 
       if (j > 0) {
@@ -417,12 +364,8 @@ print_rounds(FILE *f,
         alive -= 1;
         flags |= 4;
       }
-      fprintf(f, "[%d,%d,%.2f,%.2f,%d,%d]",
-              (int)t->position[0],
-              (int)(t->position[1]),
-              t->angle,
-              t->turret.current,
-              flags,
+      fprintf(f, "[%d,%d,%.2f,%.2f,%d,%d]", (int)t->position[0],
+              (int)(t->position[1]), t->angle, t->turret.current, flags,
               sensors);
     }
     fprintf(f, "]");
@@ -431,12 +374,8 @@ print_rounds(FILE *f,
   fprintf(f, "\n  ],\n");
 }
 
-void
-print_standings(FILE            *f,
-                struct forftank *ftanks,
-                struct tank     *tanks,
-                int              ntanks)
-{
+void print_standings(FILE *f, struct forftank *ftanks, struct tank *tanks,
+                     int ntanks) {
 
   fprintf(f, "  \"tanks\": [\n");
   for (int i = 0; i < ntanks; i += 1) {
@@ -462,7 +401,8 @@ print_standings(FILE            *f,
     fprintf(f, "      \"killer\": %d,\n", killer);
     fprintf(f, "      \"kills\": %d,\n", kills);
     fprintf(f, "      \"errorPos\": %d,\n", ftanks[i].error_pos);
-    fprintf(f, "      \"error\": \"%s\",\n", forf_error_str[ftanks[i].env.error]);
+    fprintf(f, "      \"error\": \"%s\",\n",
+            forf_error_str[ftanks[i].env.error]);
     fprintf(f, "      \"sensors\": [\n");
     for (int j = 0; j < TANK_MAX_SENSORS; j += 1) {
       struct sensor *s = &(tanks[i].sensors[j]);
@@ -470,15 +410,15 @@ print_standings(FILE            *f,
       if (j > 0) {
         fprintf(f, ",\n");
       }
-      
-      if (! s->range) {
+
+      if (!s->range) {
         fprintf(f, "        null");
       } else {
-        fprintf(f, "        {\"range\":%d,\"angle\":%.2f,\"width\":%.2f,\"turret\":%s}",
-                (int)(s->range),
-                s->angle,
-                s->width,
-                s->turret?"true":"false");
+        fprintf(f,
+                "        "
+                "{\"range\":%d,\"angle\":%.2f,\"width\":%.2f,\"turret\":%s}",
+                (int)(s->range), s->angle, s->width,
+                s->turret ? "true" : "false");
       }
     }
     fprintf(f, "\n      ]");
@@ -488,39 +428,36 @@ print_standings(FILE            *f,
   fprintf(f, "\n  ],\n");
 }
 
-void
-print_footer(FILE *f)
-{
-  fprintf(f, "  \"\": null\n"); // sentry, so everything prior can end with a comma
+void print_footer(FILE *f) {
+  fprintf(f,
+          "  \"\": null\n"); // sentry, so everything prior can end with a comma
   fprintf(f, "}\n");
 }
 
-int
-main(int argc, char *argv[])
-{
-  struct tanks_game       game;
-  struct forftank         myftanks[MAX_TANKS];
-  struct tank             mytanks[MAX_TANKS];
+int main(int argc, char *argv[]) {
+  struct tanks_game game;
+  struct forftank myftanks[MAX_TANKS];
+  struct tank mytanks[MAX_TANKS];
   struct forf_lexical_env lenv[LENV_SIZE];
-  int                     order[MAX_TANKS];
-  int                     ntanks = 0;
-  int                     i;
+  int order[MAX_TANKS];
+  int ntanks = 0;
+  int i;
   int seed;
 
   lenv[0].name = NULL;
   lenv[0].proc = NULL;
-  if ((! forf_extend_lexical_env(lenv, forf_base_lexical_env, LENV_SIZE)) ||
-      (! forf_extend_lexical_env(lenv, tanks_lenv_addons, LENV_SIZE))) {
+  if ((!forf_extend_lexical_env(lenv, forf_base_lexical_env, LENV_SIZE)) ||
+      (!forf_extend_lexical_env(lenv, tanks_lenv_addons, LENV_SIZE))) {
     fprintf(stderr, "Unable to initialize lexical environment.\n");
     return 1;
   }
 
   /* We only need slightly random numbers */
   {
-    char *s    = getenv("SEED");
-    seed = atoi(s?s:"");
+    char *s = getenv("SEED");
+    seed = atoi(s ? s : "");
 
-    if (! seed) {
+    if (!seed) {
       seed = getpid();
     }
 
@@ -534,10 +471,7 @@ main(int argc, char *argv[])
 
   /* Every argument is a tank directory */
   for (i = 1; ntanks < MAX_TANKS && i < argc; i += 1) {
-    if (ft_read_tank(&myftanks[ntanks],
-                     &mytanks[ntanks],
-                     lenv,
-                     argv[i])) {
+    if (ft_read_tank(&myftanks[ntanks], &mytanks[ntanks], lenv, argv[i])) {
       ntanks += 1;
     }
   }
@@ -546,7 +480,8 @@ main(int argc, char *argv[])
   {
     int x, y;
 
-    for (x = 1; x * x < ntanks; x += 1);
+    for (x = 1; x * x < ntanks; x += 1)
+      ;
     y = ntanks / x;
     if (ntanks % x) {
       y += 1;
@@ -570,8 +505,8 @@ main(int argc, char *argv[])
 
   /* Position tanks */
   {
-    int x = SPACING/2;
-    int y = SPACING/2;
+    int x = SPACING / 2;
+    int y = SPACING / 2;
 
     for (i = 0; i < ntanks; i += 1) {
       mytanks[order[i]].position[0] = (float)x;

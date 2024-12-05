@@ -1,11 +1,13 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
 #include "ctanks.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 /* Debugging help */
-#define DUMPf(fmt, args...) fprintf(stderr, "%s:%s:%d " fmt "\n", __FILE__, __FUNCTION__, __LINE__, ##args)
+#define DUMPf(fmt, args...)                                                    \
+  fprintf(stderr, "%s:%s:%d " fmt "\n", __FILE__, __FUNCTION__, __LINE__,      \
+          ##args)
 #define DUMP() DUMPf("")
 #define DUMP_d(v) DUMPf("%s = %d", #v, v)
 #define DUMP_x(v) DUMPf("%s = 0x%x", #v, v)
@@ -14,94 +16,63 @@
 #define DUMP_f(v) DUMPf("%s = %f", #v, v)
 #define DUMP_p(v) DUMPf("%s = %p", #v, v)
 #define DUMP_xy(v) DUMPf("%s = (%f, %f)", #v, v[0], v[1]);
-#define DUMP_angle(v) DUMPf("%s = %.3fτ", #v, (v/TAU));
+#define DUMP_angle(v) DUMPf("%s = %.3fτ", #v, (v / TAU));
 
 #define sq(x) ((x) * (x))
 
-
-void
-tank_init(struct tank *tank, tank_run_func *run, void *udata)
-{
+void tank_init(struct tank *tank, tank_run_func *run, void *udata) {
   memset(tank, 0, sizeof(*tank));
   tank->run = run;
   tank->udata = udata;
 }
 
-int
-tank_fire_ready(struct tank *tank)
-{
-  return (! tank->turret.recharge);
-}
+int tank_fire_ready(struct tank *tank) { return (!tank->turret.recharge); }
 
-void
-tank_fire(struct tank *tank)
-{
+void tank_fire(struct tank *tank) {
   tank->turret.firing = tank_fire_ready(tank);
 }
 
-void
-tank_set_speed(struct tank *tank, float left, float right)
-{
+void tank_set_speed(struct tank *tank, float left, float right) {
   tank->speed.desired[0] = min(max(left, -100), 100);
   tank->speed.desired[1] = min(max(right, -100), 100);
 }
 
-float
-tank_get_turret(struct tank *tank)
-{
-  return tank->turret.current;
-}
+float tank_get_turret(struct tank *tank) { return tank->turret.current; }
 
-void
-tank_set_turret(struct tank *tank, float angle)
-{
+void tank_set_turret(struct tank *tank, float angle) {
   tank->turret.desired = fmodf(angle, TAU);
 }
 
-int
-tank_get_sensor(struct tank *tank, int sensor_num)
-{
+int tank_get_sensor(struct tank *tank, int sensor_num) {
   if ((sensor_num < 0) || (sensor_num > TANK_MAX_SENSORS)) {
     return 0;
   }
   return tank->sensors[sensor_num].triggered;
 }
 
-void
-tank_set_led(struct tank *tank, int active)
-{
-  tank->led = active;
-}
+void tank_set_led(struct tank *tank, int active) { tank->led = active; }
 
-static void
-rotate_point(float angle, float point[2])
-{
+static void rotate_point(float angle, float point[2]) {
   float cos_, sin_;
   float new[2];
 
   cos_ = cosf(angle);
   sin_ = sinf(angle);
 
-  new[0] = point[0]*cos_ - point[1]*sin_;
-  new[1] = point[0]*sin_ + point[1]*cos_;
+  new[0] = point[0] * cos_ - point[1] * sin_;
+  new[1] = point[0] * sin_ + point[1] * cos_;
 
   point[0] = new[0];
   point[1] = new[1];
 }
 
-
-static void
-tanks_fire_cannon(struct tanks_game *game,
-                  struct tank *this,
-                  struct tank *that,
-                  float vector[2],
-                  float dist2)
-{
+static void tanks_fire_cannon(struct tanks_game *game, struct tank *this,
+                              struct tank *that, float vector[2], float dist2) {
   float theta = this->angle + this->turret.current;
   float rpos[2];
 
-  /* If someone's a crater, this is easy (unless we were just killed by the other one, in which case
-     we have to check the other direction) */
+  /* If someone's a crater, this is easy (unless we were just killed by the
+     other one, in which case we have to check the other direction) */
   if ((this->killer && this->killer != that) || that->killer) {
     return;
   }
@@ -118,7 +89,7 @@ tanks_fire_cannon(struct tanks_game *game,
   }
 
   /* No need to check if it's not even firing */
-  if (! this->turret.firing) {
+  if (!this->turret.firing) {
     return;
   }
 
@@ -138,14 +109,9 @@ tanks_fire_cannon(struct tanks_game *game,
   }
 }
 
-static void
-tanks_sensor_calc(struct tanks_game *game,
-                  struct tank       *this,
-                  struct tank       *that,
-                  float              vector[2],
-                  float              dist2)
-{
-  int   i;
+static void tanks_sensor_calc(struct tanks_game *game, struct tank *this,
+                              struct tank *that, float vector[2], float dist2) {
+  int i;
 
   /* If someone's a crater, this is easy */
   if (this->killer || that->killer) {
@@ -211,14 +177,9 @@ tanks_sensor_calc(struct tanks_game *game,
   }
 }
 
-void
-compute_vector(struct tanks_game *game,
-               float              vector[2],
-               float             *dist2,
-               struct tank       *this,
-               struct tank       *that)
-{
-  int   i;
+void compute_vector(struct tanks_game *game, float vector[2], float *dist2,
+                    struct tank *this, struct tank *that) {
+  int i;
 
   /* Establish shortest vector from center of this to center of that,
    * taking wrapping into account */
@@ -228,8 +189,7 @@ compute_vector(struct tanks_game *game,
     vector[i] = that->position[i] - this->position[i];
     if (vector[i] > halfsize) {
       vector[i] = vector[i] - game->size[i];
-    }
-    else if (vector[i] < -halfsize) {
+    } else if (vector[i] < -halfsize) {
       vector[i] = game->size[i] + vector[i];
     }
   }
@@ -238,18 +198,15 @@ compute_vector(struct tanks_game *game,
   *dist2 = sq(vector[0]) + sq(vector[1]);
 }
 
-void
-tanks_move_tank(struct tanks_game *game,
-                struct tank *tank)
-{
-  int   i;
+void tanks_move_tank(struct tanks_game *game, struct tank *tank) {
+  int i;
   float movement;
   float angle;
-  int   dir = 1;
+  int dir = 1;
 
   /* Rotate the turret */
   {
-    float rot_angle;              /* Quickest way there */
+    float rot_angle; /* Quickest way there */
 
     /* Constrain rot_angle to between -PI and PI */
     rot_angle = tank->turret.desired - tank->turret.current;
@@ -268,18 +225,18 @@ tanks_move_tank(struct tanks_game *game,
     if (tank->speed.current[i] == tank->speed.desired[i]) {
       /* Do nothing */
     } else if (tank->speed.current[i] < tank->speed.desired[i]) {
-      tank->speed.current[i] = min(tank->speed.current[i] + TANK_MAX_ACCEL,
-                                   tank->speed.desired[i]);
+      tank->speed.current[i] =
+          min(tank->speed.current[i] + TANK_MAX_ACCEL, tank->speed.desired[i]);
     } else {
-      tank->speed.current[i] = max(tank->speed.current[i] - TANK_MAX_ACCEL,
-                                   tank->speed.desired[i]);
+      tank->speed.current[i] =
+          max(tank->speed.current[i] - TANK_MAX_ACCEL, tank->speed.desired[i]);
     }
   }
 
   /* The simple case */
   if (tank->speed.current[0] == tank->speed.current[1]) {
     movement = tank->speed.current[0] * (TANK_TOP_SPEED / 100.0);
-    angle    = 0;
+    angle = 0;
   } else {
     /* pflarr's original comment:
      *
@@ -301,7 +258,8 @@ tanks_move_tank(struct tanks_game *game,
        to be a penalty for having the treads go in opposite directions.
        This probably plays hell with precisely-planned tanks, which I
        find very ha ha. */
-    friction = TANK_FRICTION * (fabsf(tank->speed.current[0] - tank->speed.current[1]) / 200);
+    friction = TANK_FRICTION *
+               (fabsf(tank->speed.current[0] - tank->speed.current[1]) / 200);
     v[0] = tank->speed.current[0] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
     v[1] = tank->speed.current[1] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
 
@@ -330,7 +288,7 @@ tanks_move_tank(struct tanks_game *game,
            theta = So/r
        We multiply it by dir to adjust for the direction of rotation
     */
-    theta = So/r * dir;
+    theta = So / r * dir;
 
     movement = r * tanf(theta);
     angle = theta;
@@ -345,18 +303,16 @@ tanks_move_tank(struct tanks_game *game,
     m[1] = sinf(tank->angle) * movement * dir;
 
     for (i = 0; i < 2; i += 1) {
-      tank->position[i] = fmodf(tank->position[i] + m[i] + game->size[i],
-                                game->size[i]);
+      tank->position[i] =
+          fmodf(tank->position[i] + m[i] + game->size[i], game->size[i]);
     }
   }
 }
 
-void
-tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks)
-{
-  int   i, j;
+void tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks) {
+  int i, j;
   float vector[2];
-  float dist2;                  /* distance squared */
+  float dist2; /* distance squared */
 
   /* It takes (at least) two to tank-o */
   if (ntanks < 2) {
@@ -369,7 +325,8 @@ tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks)
       tanks[i].turret.firing = 0;
       tanks[i].turret.recharge = TANK_CANNON_RECHARGE;
     }
-    if (tanks[i].killer) continue;
+    if (tanks[i].killer)
+      continue;
     if (tanks[i].turret.recharge) {
       tanks[i].turret.recharge -= 1;
     }
@@ -380,13 +337,15 @@ tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks)
 
   /* Move tanks */
   for (i = 0; i < ntanks; i += 1) {
-    if (tanks[i].killer) continue;
+    if (tanks[i].killer)
+      continue;
     tanks_move_tank(game, &(tanks[i]));
   }
 
   /* Probe sensors */
   for (i = 0; i < ntanks; i += 1) {
-    if (tanks[i].killer) continue;
+    if (tanks[i].killer)
+      continue;
     for (j = i + 1; j < ntanks; j += 1) {
       struct tank *this = &tanks[i];
       struct tank *that = &tanks[j];
@@ -401,13 +360,15 @@ tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks)
 
   /* Run programs */
   for (i = 0; i < ntanks; i += 1) {
-    if (tanks[i].killer) continue;
+    if (tanks[i].killer)
+      continue;
     tanks[i].run(&tanks[i], tanks[i].udata);
   }
 
   /* Fire cannons and check for crashes */
   for (i = 0; i < ntanks; i += 1) {
-    if (tanks[i].killer) continue;
+    if (tanks[i].killer)
+      continue;
     for (j = i + 1; j < ntanks; j += 1) {
       struct tank *this = &tanks[i];
       struct tank *that = &tanks[j];

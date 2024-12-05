@@ -27,28 +27,22 @@
  * and not new stack types.
  */
 
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <limits.h>
 
-#include "forf.h"
 #include "dump.h"
+#include "forf.h"
 
 #ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 char *forf_error_str[] = {
-  "None",
-  "Runtime",
-  "Parse",
-  "Underflow",
-  "Overflow",
-  "Type",
-  "No such procedure",
-  "Divide by zero",
+    "None", "Runtime",           "Parse",          "Underflow", "Overflow",
+    "Type", "No such procedure", "Divide by zero",
 };
 
 /*
@@ -56,15 +50,10 @@ char *forf_error_str[] = {
  * Memory manipulation
  *
  */
-void
-forf_memory_init(struct forf_memory *m,
-                 long               *values,
-                 size_t              size)
-{
-  m->mem  = values;
+void forf_memory_init(struct forf_memory *m, long *values, size_t size) {
+  m->mem = values;
   m->size = size;
 }
-
 
 /*
  *
@@ -72,31 +61,18 @@ forf_memory_init(struct forf_memory *m,
  *
  */
 
-void
-forf_stack_init(struct forf_stack *s,
-                struct forf_value *values,
-                size_t             size)
-{
+void forf_stack_init(struct forf_stack *s, struct forf_value *values,
+                     size_t size) {
   s->stack = values;
   s->size = size;
   s->top = 0;
 }
 
-void
-forf_stack_reset(struct forf_stack *s)
-{
-  s->top = 0;
-}
+void forf_stack_reset(struct forf_stack *s) { s->top = 0; }
 
-size_t
-forf_stack_len(struct forf_stack *s)
-{
-  return s->top;
-}
+size_t forf_stack_len(struct forf_stack *s) { return s->top; }
 
-int
-forf_stack_push(struct forf_stack *s, struct forf_value *v)
-{
+int forf_stack_push(struct forf_stack *s, struct forf_value *v) {
   if (s->top == s->size) {
     return 0;
   }
@@ -104,9 +80,7 @@ forf_stack_push(struct forf_stack *s, struct forf_value *v)
   return 1;
 }
 
-int
-forf_stack_pop(struct forf_stack *s, struct forf_value *v)
-{
+int forf_stack_pop(struct forf_stack *s, struct forf_value *v) {
   if (0 == s->top) {
     return 0;
   }
@@ -114,23 +88,18 @@ forf_stack_pop(struct forf_stack *s, struct forf_value *v)
   return 1;
 }
 
-void
-forf_stack_copy(struct forf_stack *dst, struct forf_stack *src)
-{
+void forf_stack_copy(struct forf_stack *dst, struct forf_stack *src) {
   int top = min(dst->size, src->top);
 
   dst->top = top;
   memcpy(dst->stack, src->stack, sizeof(*dst->stack) * top);
 }
 
-
-void
-forf_stack_reverse(struct forf_stack *s)
-{
+void forf_stack_reverse(struct forf_stack *s) {
   struct forf_value val;
   size_t pos;
 
-  for (pos = 0; pos < (s->top)/2; pos += 1) {
+  for (pos = 0; pos < (s->top) / 2; pos += 1) {
     size_t qos = s->top - pos - 1;
 
     val = s->stack[pos];
@@ -139,12 +108,10 @@ forf_stack_reverse(struct forf_stack *s)
   }
 }
 
-long
-forf_pop_num(struct forf_env *env)
-{
+long forf_pop_num(struct forf_env *env) {
   struct forf_value val;
 
-  if (! forf_stack_pop(env->data, &val)) {
+  if (!forf_stack_pop(env->data, &val)) {
     env->error = forf_error_underflow;
     return 0;
   }
@@ -156,18 +123,15 @@ forf_pop_num(struct forf_env *env)
   return val.v.i;
 }
 
-void
-forf_push_num(struct forf_env *env, long i)
-{
+void forf_push_num(struct forf_env *env, long i) {
   struct forf_value val;
 
   val.type = forf_type_number;
   val.v.i = i;
-  if (! forf_stack_push(env->data, &val)) {
+  if (!forf_stack_push(env->data, &val)) {
     env->error = forf_error_overflow;
   }
 }
-
 
 /* Pop an entire stack
  *
@@ -177,14 +141,12 @@ forf_push_num(struct forf_env *env, long i)
  * finished with this stack before you push anything onto the data
  * stack, otherwise your returned stack will be corrupted.
  */
-struct forf_stack
-forf_pop_stack(struct forf_env *env)
-{
-  struct forf_stack s     = { 0, 0, NULL };
+struct forf_stack forf_pop_stack(struct forf_env *env) {
+  struct forf_stack s = {0, 0, NULL};
   struct forf_value val;
-  size_t            depth = 1;
+  size_t depth = 1;
 
-  if (! forf_stack_pop(env->data, &val)) {
+  if (!forf_stack_pop(env->data, &val)) {
     env->error = forf_error_underflow;
     return s;
   }
@@ -198,7 +160,7 @@ forf_pop_stack(struct forf_env *env)
   s.size = -1;
   while (depth) {
     s.size += 1;
-    if (! forf_stack_pop(env->data, &val)) {
+    if (!forf_stack_pop(env->data, &val)) {
       /* You should never underflow here, there should at least be a
          stack begin marker. */
       env->error = forf_error_runtime;
@@ -206,14 +168,14 @@ forf_pop_stack(struct forf_env *env)
       return s;
     }
     switch (val.type) {
-      case forf_type_stack_end:
-        depth += 1;
-        break;
-      case forf_type_stack_begin:
-        depth -= 1;
-        break;
-      default:
-        break;
+    case forf_type_stack_end:
+      depth += 1;
+      break;
+    case forf_type_stack_begin:
+      depth -= 1;
+      break;
+    default:
+      break;
     }
   }
   s.top = s.size;
@@ -223,13 +185,11 @@ forf_pop_stack(struct forf_env *env)
 
 /* Push an entire stack onto another stack.
  */
-int
-forf_push_stack(struct forf_stack *dst, struct forf_stack *src)
-{
+int forf_push_stack(struct forf_stack *dst, struct forf_stack *src) {
   struct forf_value val;
 
   while (forf_stack_pop(src, &val)) {
-    if (! forf_stack_push(dst, &val)) {
+    if (!forf_stack_push(dst, &val)) {
       return 0;
     }
   }
@@ -240,10 +200,8 @@ forf_push_stack(struct forf_stack *dst, struct forf_stack *src)
  *
  * This is meant to work with the return value from forf_pop_stack.
  */
-int
-forf_push_to_command_stack(struct forf_env *env, struct forf_stack *src)
-{
-  if (! forf_push_stack(env->command, src)) {
+int forf_push_to_command_stack(struct forf_env *env, struct forf_stack *src) {
+  if (!forf_push_stack(env->command, src)) {
     env->error = forf_error_overflow;
     return 0;
   }
@@ -259,24 +217,21 @@ forf_push_to_command_stack(struct forf_env *env, struct forf_stack *src)
  * always have "reversed" substacks, and everything else will have them
  * in the right order.
  */
-int
-forf_stack_move_value(struct forf_env *env,
-                      struct forf_stack *dst,
-                      struct forf_stack *src)
-{
+int forf_stack_move_value(struct forf_env *env, struct forf_stack *dst,
+                          struct forf_stack *src) {
   struct forf_value val;
-  size_t            depth = 0;
+  size_t depth = 0;
 
   do {
     /* Pop from src */
-    if (! forf_stack_pop(env->command, &val)) {
+    if (!forf_stack_pop(env->command, &val)) {
       env->error = forf_error_underflow;
       return 0;
     }
 
     /* Push to dst (or discard if dst is NULL) */
     if (dst) {
-      if (! forf_stack_push(env->data, &val)) {
+      if (!forf_stack_push(env->data, &val)) {
         env->error = forf_error_overflow;
         return 0;
       }
@@ -284,21 +239,19 @@ forf_stack_move_value(struct forf_env *env,
 
     /* Deal with it being a substack marker */
     switch (val.type) {
-      case forf_type_stack_begin:
-        depth += 1;
-        break;
-      case forf_type_stack_end:
-        depth -= 1;
-        break;
-      default:
-        break;
+    case forf_type_stack_begin:
+      depth += 1;
+      break;
+    case forf_type_stack_end:
+      depth -= 1;
+      break;
+    default:
+      break;
     }
   } while (depth > 0);
 
   return 1;
-
 }
-
 
 /*
  *
@@ -306,46 +259,29 @@ forf_stack_move_value(struct forf_env *env,
  *
  */
 
-#define unproc(name, op)                        \
-  static void                                   \
-  forf_proc_ ## name(struct forf_env *env)      \
-  {                                             \
-    long a = forf_pop_num(env);                 \
-                                                \
-    forf_push_num(env, op a);                   \
+#define unproc(name, op)                                                       \
+  static void forf_proc_##name(struct forf_env *env) {                         \
+    long a = forf_pop_num(env);                                                \
+                                                                               \
+    forf_push_num(env, op a);                                                  \
   }
 
-unproc(inv, ~)
-unproc(not, !)
+unproc(inv, ~) unproc(not, !)
 
-#define binproc(name, op)                         \
-  static void                                     \
-  forf_proc_ ## name(struct forf_env *env)        \
-  {                                               \
-    long a = forf_pop_num(env);                   \
-    long b = forf_pop_num(env);                   \
-                                                  \
-    forf_push_num(env, b op a);                   \
+#define binproc(name, op)                                                      \
+  static void forf_proc_##name(struct forf_env *env) {                         \
+    long a = forf_pop_num(env);                                                \
+    long b = forf_pop_num(env);                                                \
+                                                                               \
+    forf_push_num(env, b op a);                                                \
   }
 
-binproc(add, +)
-binproc(sub, -)
-binproc(mul, *)
-binproc(and, &)
-binproc(or, |)
-binproc(xor, ^)
-binproc(lshift, <<)
-binproc(rshift, >>)
-binproc(gt, >)
-binproc(ge, >=)
-binproc(lt, <)
-binproc(le, <=)
-binproc(eq, ==)
-binproc(ne, !=)
+    binproc(add, +) binproc(sub, -) binproc(mul, *) binproc(and, &)
+        binproc(or, |) binproc(xor, ^) binproc(lshift, <<) binproc(rshift, >>)
+            binproc(gt, >) binproc(ge, >=) binproc(lt, <) binproc(le, <=)
+                binproc(eq, ==) binproc(ne, !=)
 
-static void
-forf_proc_div(struct forf_env *env)
-{
+                    static void forf_proc_div(struct forf_env *env) {
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
@@ -356,9 +292,7 @@ forf_proc_div(struct forf_env *env)
   forf_push_num(env, b / a);
 }
 
-static void
-forf_proc_mod(struct forf_env *env)
-{
+static void forf_proc_mod(struct forf_env *env) {
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
@@ -369,30 +303,20 @@ forf_proc_mod(struct forf_env *env)
   forf_push_num(env, b % a);
 }
 
-static void
-forf_proc_abs(struct forf_env *env)
-{
+static void forf_proc_abs(struct forf_env *env) {
   forf_push_num(env, abs(forf_pop_num(env)));
 }
 
-static void
-forf_proc_dup(struct forf_env *env)
-{
+static void forf_proc_dup(struct forf_env *env) {
   long a = forf_pop_num(env);
 
   forf_push_num(env, a);
   forf_push_num(env, a);
 }
 
-static void
-forf_proc_pop(struct forf_env *env)
-{
-  forf_pop_num(env);
-}
+static void forf_proc_pop(struct forf_env *env) { forf_pop_num(env); }
 
-static void
-forf_proc_exch(struct forf_env *env)
-{
+static void forf_proc_exch(struct forf_env *env) {
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
@@ -400,23 +324,19 @@ forf_proc_exch(struct forf_env *env)
   forf_push_num(env, b);
 }
 
-static void
-forf_proc_if(struct forf_env *env)
-{
-  struct forf_stack ifclause   = forf_pop_stack(env);
-  long              cond       = forf_pop_num(env);
+static void forf_proc_if(struct forf_env *env) {
+  struct forf_stack ifclause = forf_pop_stack(env);
+  long cond = forf_pop_num(env);
 
   if (cond) {
     forf_push_to_command_stack(env, &ifclause);
   }
 }
 
-static void
-forf_proc_ifelse(struct forf_env *env)
-{
+static void forf_proc_ifelse(struct forf_env *env) {
   struct forf_stack elseclause = forf_pop_stack(env);
-  struct forf_stack ifclause   = forf_pop_stack(env);
-  long              cond       = forf_pop_num(env);
+  struct forf_stack ifclause = forf_pop_stack(env);
+  long cond = forf_pop_num(env);
 
   if (cond) {
     forf_push_to_command_stack(env, &ifclause);
@@ -425,11 +345,9 @@ forf_proc_ifelse(struct forf_env *env)
   }
 }
 
-static void
-forf_proc_memset(struct forf_env *env)
-{
+static void forf_proc_memset(struct forf_env *env) {
   long pos = forf_pop_num(env);
-  long a   = forf_pop_num(env);
+  long a = forf_pop_num(env);
 
   if (pos >= env->memory->size) {
     env->error = forf_error_overflow;
@@ -439,9 +357,7 @@ forf_proc_memset(struct forf_env *env)
   env->memory->mem[pos] = a;
 }
 
-static void
-forf_proc_memget(struct forf_env *env)
-{
+static void forf_proc_memget(struct forf_env *env) {
   long pos = forf_pop_num(env);
 
   if (pos >= env->memory->size) {
@@ -457,70 +373,63 @@ forf_proc_memget(struct forf_env *env)
  * Lexical environment
  *
  */
-struct forf_lexical_env forf_base_lexical_env[] = {
-  {"~", forf_proc_inv},
-  {"!", forf_proc_not},
-  {"+", forf_proc_add},
-  {"-", forf_proc_sub},
-  {"*", forf_proc_mul},
-  {"/", forf_proc_div},
-  {"%", forf_proc_mod},
-  {"&", forf_proc_and},
-  {"|", forf_proc_or},
-  {"^", forf_proc_xor},
-  {"<<", forf_proc_lshift},
-  {">>", forf_proc_rshift},
-  {">", forf_proc_gt},
-  {">=", forf_proc_ge},
-  {"<", forf_proc_lt},
-  {"<=", forf_proc_le},
-  {"=", forf_proc_eq},
-  {"<>", forf_proc_ne},
-  {"abs", forf_proc_abs},
-  {"dup", forf_proc_dup},
-  {"pop", forf_proc_pop},
-  {"exch", forf_proc_exch},
-  {"if", forf_proc_if},
-  {"ifelse", forf_proc_ifelse},
-  {"mset", forf_proc_memset},
-  {"mget", forf_proc_memget},
-  {NULL, NULL}
-};
+struct forf_lexical_env forf_base_lexical_env[] = {{"~", forf_proc_inv},
+                                                   {"!", forf_proc_not},
+                                                   {"+", forf_proc_add},
+                                                   {"-", forf_proc_sub},
+                                                   {"*", forf_proc_mul},
+                                                   {"/", forf_proc_div},
+                                                   {"%", forf_proc_mod},
+                                                   {"&", forf_proc_and},
+                                                   {"|", forf_proc_or},
+                                                   {"^", forf_proc_xor},
+                                                   {"<<", forf_proc_lshift},
+                                                   {">>", forf_proc_rshift},
+                                                   {">", forf_proc_gt},
+                                                   {">=", forf_proc_ge},
+                                                   {"<", forf_proc_lt},
+                                                   {"<=", forf_proc_le},
+                                                   {"=", forf_proc_eq},
+                                                   {"<>", forf_proc_ne},
+                                                   {"abs", forf_proc_abs},
+                                                   {"dup", forf_proc_dup},
+                                                   {"pop", forf_proc_pop},
+                                                   {"exch", forf_proc_exch},
+                                                   {"if", forf_proc_if},
+                                                   {"ifelse", forf_proc_ifelse},
+                                                   {"mset", forf_proc_memset},
+                                                   {"mget", forf_proc_memget},
+                                                   {NULL, NULL}};
 
 /** Extend a lexical environment */
-int
-forf_extend_lexical_env(struct forf_lexical_env *dest,
-                        struct forf_lexical_env *src,
-                        size_t size)
-{
+int forf_extend_lexical_env(struct forf_lexical_env *dest,
+                            struct forf_lexical_env *src, size_t size) {
   int base, i;
 
-  for (base = 0; dest[base].name; base += 1);
-  for (i = 0; (base+i < size) && (src[i].name); i += 1) {
-    dest[base+i] = src[i];
+  for (base = 0; dest[base].name; base += 1)
+    ;
+  for (i = 0; (base + i < size) && (src[i].name); i += 1) {
+    dest[base + i] = src[i];
   }
   if (base + i == size) {
     /* Not enough room */
     return 0;
   }
-  dest[base+i].name = NULL;
-  dest[base+i].proc = NULL;
+  dest[base + i].name = NULL;
+  dest[base + i].proc = NULL;
   return 1;
 }
-
 
 /*
  *
  * Parsing
  *
  */
-static int
-forf_push_token(struct forf_env *env, char *token, size_t tokenlen)
-{
-  long               i;
-  char               s[MAX_TOKEN_LEN + 1];
-  char              *endptr;
-  struct forf_value  val;
+static int forf_push_token(struct forf_env *env, char *token, size_t tokenlen) {
+  long i;
+  char s[MAX_TOKEN_LEN + 1];
+  char *endptr;
+  struct forf_value val;
 
   /* Zero-length token yields int:0 from strtol */
 
@@ -549,7 +458,7 @@ forf_push_token(struct forf_env *env, char *token, size_t tokenlen)
     }
   }
 
-  if (! forf_stack_push(env->command, &val)) {
+  if (!forf_stack_push(env->command, &val)) {
     env->error = forf_error_overflow;
     return 0;
   }
@@ -558,25 +467,23 @@ forf_push_token(struct forf_env *env, char *token, size_t tokenlen)
 }
 
 /* Parse an input stream onto the command stack */
-int
-forf_parse_stream(struct forf_env *env,
-                  forf_getch_func *getch,
-                  void            *datum)
-{
-  int               running     = 1;
-  long              pos         = 0;
-  char              token[MAX_TOKEN_LEN];
-  size_t            tokenlen    = 0;
+int forf_parse_stream(struct forf_env *env, forf_getch_func *getch,
+                      void *datum) {
+  int running = 1;
+  long pos = 0;
+  char token[MAX_TOKEN_LEN];
+  size_t tokenlen = 0;
   struct forf_value val;
-  size_t            stack_depth = 0;
-  int               comment     = 0;
+  size_t stack_depth = 0;
+  int comment = 0;
 
-#define _tokenize()                             \
-  do {                                          \
-    if (tokenlen) {                             \
-      if (! forf_push_token(env, token, tokenlen)) return pos; \
-      tokenlen = 0;                             \
-    }                                           \
+#define _tokenize()                                                            \
+  do {                                                                         \
+    if (tokenlen) {                                                            \
+      if (!forf_push_token(env, token, tokenlen))                              \
+        return pos;                                                            \
+      tokenlen = 0;                                                            \
+    }                                                                          \
   } while (0)
 
   while (running) {
@@ -588,54 +495,54 @@ forf_parse_stream(struct forf_env *env,
     /* Handle comments */
     if (comment) {
       switch (c) {
-        case EOF:
-          env->error = forf_error_parse;
-          return pos;
-        case ')':
-          comment = 0;
-          break;
+      case EOF:
+        env->error = forf_error_parse;
+        return pos;
+      case ')':
+        comment = 0;
+        break;
       }
       continue;
     }
 
     switch (c) {
-      case EOF:
-        running = 0;
-        break;
-      case '(':
-        comment = 1;
-        break;
-      case ' ':
-      case '\f':
-      case '\n':
-      case '\r':
-      case '\t':
-      case '\v':
-        _tokenize();
-        break;
-      case '{':
-        _tokenize();
-        val.type = forf_type_stack_begin;
-        if (! forf_stack_push(env->command, &val)) {
-          env->error = forf_error_overflow;
-          return pos;
-        }
-        stack_depth += 1;
-        break;
-      case '}':
-        _tokenize();
-        val.type = forf_type_stack_end;
-        if (! forf_stack_push(env->command, &val)) {
-          env->error = forf_error_overflow;
-          return pos;
-        }
-        stack_depth -= 1;
-        break;
-      default:
-        if (tokenlen < sizeof(token)) {
-          token[tokenlen++] = c;
-        }
-        break;
+    case EOF:
+      running = 0;
+      break;
+    case '(':
+      comment = 1;
+      break;
+    case ' ':
+    case '\f':
+    case '\n':
+    case '\r':
+    case '\t':
+    case '\v':
+      _tokenize();
+      break;
+    case '{':
+      _tokenize();
+      val.type = forf_type_stack_begin;
+      if (!forf_stack_push(env->command, &val)) {
+        env->error = forf_error_overflow;
+        return pos;
+      }
+      stack_depth += 1;
+      break;
+    case '}':
+      _tokenize();
+      val.type = forf_type_stack_end;
+      if (!forf_stack_push(env->command, &val)) {
+        env->error = forf_error_overflow;
+        return pos;
+      }
+      stack_depth -= 1;
+      break;
+    default:
+      if (tokenlen < sizeof(token)) {
+        token[tokenlen++] = c;
+      }
+      break;
     }
   }
   _tokenize();
@@ -652,25 +559,19 @@ forf_parse_stream(struct forf_env *env,
 }
 
 struct forf_char_stream {
-  char   *buf;
-  size_t  len;
-  size_t  pos;
+  char *buf;
+  size_t len;
+  size_t pos;
 };
 
-static int
-forf_string_getch(struct forf_char_stream *stream)
-{
+static int forf_string_getch(struct forf_char_stream *stream) {
   if (stream->pos >= stream->len) {
     return EOF;
   }
   return stream->buf[stream->pos++];
 }
 
-int
-forf_parse_buffer(struct forf_env *env,
-                  char            *buf,
-                  size_t           len)
-{
+int forf_parse_buffer(struct forf_env *env, char *buf, size_t len) {
   struct forf_char_stream stream;
 
   stream.buf = buf;
@@ -680,20 +581,13 @@ forf_parse_buffer(struct forf_env *env,
   return forf_parse_stream(env, (forf_getch_func *)forf_string_getch, &stream);
 }
 
-int
-forf_parse_string(struct forf_env *env,
-                  char            *str)
-{
+int forf_parse_string(struct forf_env *env, char *str) {
   return forf_parse_buffer(env, str, strlen(str));
 }
 
-int
-forf_parse_file(struct forf_env *env,
-                FILE            *f)
-{
+int forf_parse_file(struct forf_env *env, FILE *f) {
   return forf_parse_stream(env, (forf_getch_func *)fgetc, f);
 }
-
 
 /*
  *
@@ -701,57 +595,48 @@ forf_parse_file(struct forf_env *env,
  *
  */
 
-void
-forf_env_init(struct forf_env         *env,
-              struct forf_lexical_env *lenv,
-              struct forf_stack       *data,
-              struct forf_stack       *cmd,
-              struct forf_memory      *mem,
-              void                    *udata)
-{
-  env->lenv    = lenv;
-  env->data    = data;
+void forf_env_init(struct forf_env *env, struct forf_lexical_env *lenv,
+                   struct forf_stack *data, struct forf_stack *cmd,
+                   struct forf_memory *mem, void *udata) {
+  env->lenv = lenv;
+  env->data = data;
   env->command = cmd;
-  env->memory  = mem;
-  env->udata   = udata;
+  env->memory = mem;
+  env->udata = udata;
 }
 
-
-int
-forf_eval_once(struct forf_env *env)
-{
+int forf_eval_once(struct forf_env *env) {
   struct forf_value val;
 
-  if (! forf_stack_pop(env->command, &val)) {
+  if (!forf_stack_pop(env->command, &val)) {
     env->error = forf_error_underflow;
     return 0;
   }
   switch (val.type) {
-    case forf_type_number:
-    case forf_type_stack_begin:
-      // Push back on command stack, then move it
-      forf_stack_push(env->command, &val);
-      if (! forf_stack_move_value(env, env->data, env->command)) return 0;
-      break;
-    case forf_type_proc:
-      (val.v.p)(env);
-      break;
-    default:
-      env->error = forf_error_runtime;
+  case forf_type_number:
+  case forf_type_stack_begin:
+    // Push back on command stack, then move it
+    forf_stack_push(env->command, &val);
+    if (!forf_stack_move_value(env, env->data, env->command))
       return 0;
+    break;
+  case forf_type_proc:
+    (val.v.p)(env);
+    break;
+  default:
+    env->error = forf_error_runtime;
+    return 0;
   }
   return 1;
 }
 
-int
-forf_eval(struct forf_env *env)
-{
+int forf_eval(struct forf_env *env) {
   int ret;
 
   env->error = forf_error_none;
   while (env->command->top) {
     ret = forf_eval_once(env);
-    if ((! ret) || (env->error)) {
+    if ((!ret) || (env->error)) {
       return 0;
     }
   }
