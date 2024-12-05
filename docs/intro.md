@@ -1,3 +1,9 @@
+---
+title: Tanks Introduction
+scripts:
+  - assets/js/tanks.js
+  - assets/js/figures.js
+---
 # Tanks Introduction 
 
 <figure>
