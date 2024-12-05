@@ -5,15 +5,13 @@ scripts:
  - assets/js/figures.js
 ---
 
-<table class="figure">
-  <caption>"Ant Lion" nails "Rabbit With Gun".</caption>
-  <tr><td>
-    <canvas id="antlion"></canvas>
-    <script type="application/javascript">
-      start("antlion", antlion);
-    </script>
-  </td></tr>
-</table>
+<figure>
+  <canvas id="antlion"></canvas>
+  <figcaption>"Ant Lion" nails "Rabbit With Gun".</figcaption>
+  <script type="application/javascript">
+    start("antlion", antlion);
+  </script>
+</figure>
 
 Dirtbags Tanks is a game in which you pit your coding abilities
 against other hackers.  You write a program for your tank, set it out
