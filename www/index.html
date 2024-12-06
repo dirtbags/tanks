@@ -62,8 +62,14 @@
         <legend>Tank Designer</legend>
         <fieldset class="program">
           <legend>Program</legend>
-          <textarea name="program">30 40 set-speed!
-0 sensor? { fire! } if
+          <textarea name="program">get-turret 12 + set-turret! ( Rotate turret )
+37 40 set-speed!            ( Go in circles )
+
+( Fire if turret sensor triggered )
+0 sensor? { fire! } if              
+
+( Turn if collision sensor triggered )
+1 sensor? { -50 50 set-speed! } if  
           </textarea>
           <div>
             <a href="https://dirtbags.net/tanks/forf.html">Forf manual</a> <br>
@@ -83,7 +89,78 @@
                 <td>Turret?</td>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody>
+              <tr>
+                <td>0</td>
+                <td><input name="s0r" type="number" min="0" max="100" value="50"></td>
+                <td><input name="s0a" type="number" min="-360" max="360" value="0"></td>
+                <td><input name="s0w" type="number" min="-360" max="360" value="7"></td>
+                <td><input name="s0t" type="checkbox" value="on" checked></td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td><input name="s1r" type="number" min="0" max="100" value="30"></td>
+                <td><input name="s1a" type="number" min="-360" max="360" value="0"></td>
+                <td><input name="s1w" type="number" min="-360" max="360" value="90"></td>
+                <td><input name="s1t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td><input name="s2r" type="number" min="0" max="100"></td>
+                <td><input name="s2a" type="number" min="-360" max="360"></td>
+                <td><input name="s2w" type="number" min="-360" max="360"></td>
+                <td><input name="s2t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><input name="s3r" type="number" min="0" max="100"></td>
+                <td><input name="s3a" type="number" min="-360" max="360"></td>
+                <td><input name="s3w" type="number" min="-360" max="360"></td>
+                <td><input name="s3t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><input name="s4r" type="number" min="0" max="100"></td>
+                <td><input name="s4a" type="number" min="-360" max="360"></td>
+                <td><input name="s4w" type="number" min="-360" max="360"></td>
+                <td><input name="s4t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><input name="s5r" type="number" min="0" max="100"></td>
+                <td><input name="s5a" type="number" min="-360" max="360"></td>
+                <td><input name="s5w" type="number" min="-360" max="360"></td>
+                <td><input name="s5t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td><input name="s6r" type="number" min="0" max="100"></td>
+                <td><input name="s6a" type="number" min="-360" max="360"></td>
+                <td><input name="s6w" type="number" min="-360" max="360"></td>
+                <td><input name="s6t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td><input name="s7r" type="number" min="0" max="100"></td>
+                <td><input name="s7a" type="number" min="-360" max="360"></td>
+                <td><input name="s7w" type="number" min="-360" max="360"></td>
+                <td><input name="s7t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td><input name="s8r" type="number" min="0" max="100"></td>
+                <td><input name="s8a" type="number" min="-360" max="360"></td>
+                <td><input name="s8w" type="number" min="-360" max="360"></td>
+                <td><input name="s8t" type="checkbox" value="on"></td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td><input name="s9r" type="number" min="0" max="100"></td>
+                <td><input name="s9a" type="number" min="-360" max="360"></td>
+                <td><input name="s9w" type="number" min="-360" max="360"></td><td>
+                  <input name="s9t" type="checkbox" value="on"></td>
+              </tr>
+            </tbody>
           </table>
         </fieldset>
 

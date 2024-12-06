@@ -141,41 +141,10 @@ export function init() {
     let form = document.querySelector("form#upload")
     form.addEventListener("submit", formSubmit)
 
-    let tbody = document.querySelector("#sensors tbody")
-    for (let i = 0; i < 10; i++) {
-        let tr = tbody.appendChild(document.createElement("tr"))
-
-        tr.appendChild(document.createElement("td")).textContent = i
-
-        let range = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        range.name = `s${i}r`
-        range.type = "number"
-        range.min = 0
-        range.max = 100
-        range.value = 0
-
-        let angle = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        angle.name = `s${i}a`
-        angle.type = "number"
-        angle.min = -360
-        angle.max = 360
-
-        let width = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        width.name = `s${i}w`
-        width.type = "number"
-        width.min = -360
-        width.max = 360
-
-        let turret = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        turret.name = `s${i}t`
-        turret.type = "checkbox"
-        turret.value = "on"
-    }
-
     // Load in previous values
     for (let e of form.querySelectorAll("[name]")) {
         let v = localStorage.getItem(e.name)
-        if (v !== undefined) {
+        if (v !== null) {
             if (e.type == "checkbox") {
                 e.checked = (v == "on")
             } else {
@@ -183,6 +152,16 @@ export function init() {
             }
         }
     }
+
+    window.addEventListener("goto", (event) => {
+        let offset = event.detail.offset
+        let program = document.querySelector("[name=program]")
+        if (!program) {
+            return
+        }
+        program.focus()
+        program.setSelectionRange(offset, offset)
+    })
 
     update(ctx)
     setInterval(() => update(ctx), Second / FPS)

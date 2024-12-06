@@ -204,9 +204,20 @@ class Replay {
             tr.appendChild(document.createElement("td")).textContent = tank.kills
             tr.appendChild(document.createElement("td")).textContent = tank.death
             tr.appendChild(document.createElement("td")).textContent = game.tanks[tank.killer]?.name
-            tr.appendChild(document.createElement("td")).textContent = `${tank.error} @${tank.errorPos}`
-        }
-    }
+
+            let err = tr.appendChild(document.createElement("td"))
+            if (tank.error != "None") {
+                let a = err.appendChild(document.createElement("a"))
+                a.textContent = `${tank.error} @${tank.errorPos}`
+                a.href = '#'
+                a.addEventListener("click", (event) => {
+                    event.preventDefault()
+                    let seek = new CustomEvent("goto", {detail: {offset: tank.errorPos}})
+                    window.dispatchEvent(seek)
+                })
+             }
+         }
+     }
 }
 
 
