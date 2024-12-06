@@ -169,14 +169,18 @@ export function init() {
         let turret = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
         turret.name = `s${i}t`
         turret.type = "checkbox"
+        turret.value = "on"
     }
 
     // Load in previous values
     for (let e of form.querySelectorAll("[name]")) {
         let v = localStorage.getItem(e.name)
         if (v !== undefined) {
-            e.checked = (v == "on")
-            e.value = v
+            if (e.type == "checkbox") {
+                e.checked = (v == "on")
+            } else {
+                e.value = v
+            }
         }
     }
 
