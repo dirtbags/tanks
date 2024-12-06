@@ -2,3 +2,6 @@ contrib
 docs
 rounds
 tanks
+.git
+.gitignore
+.gitlab-ci.yml
