@@ -180,8 +180,7 @@ func main() {
 	http.Handle("GET /", http.FileServer(http.Dir(*wwwDir)))
 	http.Handle("GET /rounds/", http.StripPrefix("/rounds/", http.FileServer(http.Dir(*roundsDir))))
 	http.Handle("PUT /tanks/{id}/{name}", ts)
-	// XXX do this without directory indexing
-	// http.Handle("GET /tanks/", http.StripPrefix("/tanks/", http.FileServer(http.Dir(*tanksDir))))
+	http.Handle("GET /tanks/{id}/", http.StripPrefix("/tanks/", http.FileServer(http.Dir(*tanksDir))))
 
 	go ts.RunForever()
 
