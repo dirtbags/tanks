@@ -8,7 +8,53 @@
   <body>
     <h1>Tanks</h1>
 
-    <h2>Upload a tank</h2>
+    <fieldset>
+      <legend>
+        Game Replay
+      </legend>
+
+      <div>
+        <select id="game">
+          <option>latest</option>
+        </select>
+        <output id="date">moo</output>
+      </div>
+
+      <div id="game_box">
+        <canvas id="battlefield"></canvas>
+      </div>
+
+      <table id="results">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Kills</th>
+            <th>Death</th>
+            <th>Killer</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <hr>
+
+      <table id="stats">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Games</th>
+            <th>Kills</th>
+            <th>Killed</th>
+            <th>Awards</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </fieldset>
+
     <form id="upload">
       <fieldset>
         <legend>Tank Designer</legend>
@@ -77,59 +123,5 @@
 
       </fieldset>
     </form>
-
-    <fieldset>
-      <legend>
-        Game Replay
-      </legend>
-
-      <div>
-        <select id="game">
-          <option>latest</option>
-        </select>
-        <output id="date">moo</output>
-      </div>
-
-      <div id="game_box">
-        <canvas id="battlefield"></canvas>
-      </div>
-
-      <table id="results">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Kills</th>
-            <th>Death</th>
-            <th>Killer</th>
-            <th>Error</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-    </fieldset>
-
-    <fieldset>
-      <legend>
-        Statistics
-      </legend>
-
-      <table id="stats">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Games</th>
-            <th>Kills</th>
-            <th>Killed</th>
-            <th>Awards</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-    </fieldset>
-
   </body>
 </html>
