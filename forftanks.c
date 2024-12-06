@@ -15,7 +15,7 @@
 
 #define LENV_SIZE 100
 
-#define DSTACK_SIZE 200
+#define DSTACK_SIZE 500
 #define CSTACK_SIZE 500
 #define MEMORY_SIZE 10
 
@@ -439,7 +439,6 @@ void print_standings(FILE *f, struct forftank *ftanks, struct tank *tanks,
     fprintf(f, "\n      ]");
     fprintf(f, "\n    }");
   }
-
   fprintf(f, "\n  ],\n");
 }
 
