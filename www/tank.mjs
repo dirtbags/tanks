@@ -136,9 +136,9 @@ export class Tank {
             this.fire -= 1
         } else {
             if (this.led) {
-                this.ctx.fillStyle = "#f00"
+                this.ctx.fillStyle = "orange"
             } else {
-                this.ctx.fillStyle = "#000"
+                this.ctx.fillStyle = "black"
             }
             this.ctx.fillRect(0, -1, 10, 2)
         }
