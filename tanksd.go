@@ -18,7 +18,7 @@ var forftanksPath = flag.String("forftanks", "./forftanks", "path to forftanks e
 var wwwDir = flag.String("www", "www", "path to www http content (ro)")
 var tanksDir = flag.String("tanks", "tanks", "path to tanks state directories (rw)")
 var roundsDir = flag.String("rounds", "rounds", "path to rounds storage (rw)")
-var maxrounds = flag.Uint("maxrounds", 200, "number of rounds to store")
+var maxrounds = flag.Uint("maxrounds", 90, "number of rounds to store")
 var maxSize = flag.Uint("maxsize", 8000 , "maximum uploaded file size")
 var listenAddr = flag.String("listen", ":8080", "where to listen for incoming HTTP connections")
 var roundDuration = flag.Duration("round", 1 * time.Minute, "Time to wait between each round")
@@ -96,7 +96,7 @@ func (ts *TankState) WriteRound(now time.Time, round []byte) error {
 	if err != nil {
 		return err
 	}
-	for uint(len(dents)) > *maxrounds {
+	for uint(len(dents)) > (*maxrounds + 1) {
 		fn := path.Join(ts.roundsdir, dents[0].Name())
 		if err := os.Remove(fn); err != nil {
 			return err
@@ -180,6 +180,7 @@ func main() {
 	http.Handle("GET /", http.FileServer(http.Dir(*wwwDir)))
 	http.Handle("GET /rounds/", http.StripPrefix("/rounds/", http.FileServer(http.Dir(*roundsDir))))
 	http.Handle("PUT /tanks/{id}/{name}", ts)
+	http.Handle("GET /tanks/", http.StripPrefix("/tanks/", http.FileServer(http.Dir(*tanksDir))))
 
 	go ts.RunForever()
 

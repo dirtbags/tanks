@@ -142,7 +142,7 @@ class Replay {
             tr.appendChild(document.createElement("td")).textContent = TotalDeaths[uid]
 
             let award = []
-            if (TotalGames[uid] < 20) {
+            if (TotalGames[uid] < 30) {
                 award.push("noob")
             }
             if (TotalKills[uid] == MaxKills) {
@@ -151,20 +151,25 @@ class Replay {
             if (TotalDeaths[uid] == MaxDeaths) {
                 award.push("punished")
             }
+            if (TotalDeaths[uid] == TotalGames[uid]) {
+                award.push("unlucky")
+            }
             if (TotalDeaths[uid] == 0) {
                 award.push("invincible")
             }
-            if (TotalDeaths[uid] < ngames*0.33) {
-                award.push("stealthy")
-            }
-            if (TotalDeaths[uid] == ngames) {
-                award.push("wasted")
-            }
-            if (TotalGames[uid] > ngames) {
-                award.push("overachiever")
-            }
-            if (TotalKills[uid] == TotalDeaths[uid]) {
-                award.push("balanced")
+            if (TotalGames[uid] >= ngames) {
+                if (TotalDeaths[uid] < ngames*0.33) {
+                    award.push("stealthy")
+                }
+                if (TotalDeaths[uid] == ngames) {
+                    award.push("wasted")
+                }
+                if (TotalGames[uid] > ngames) {
+                    award.push("overachiever")
+                }
+                if (TotalKills[uid] == TotalDeaths[uid]) {
+                    award.push("balanced")
+                }
             }
             tr.appendChild(document.createElement("td")).textContent = award.join(", ")
         }
