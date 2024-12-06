@@ -207,17 +207,18 @@ class Replay {
 
             let err = tr.appendChild(document.createElement("td"))
             if (tank.error != "None") {
-                let a = err.appendChild(document.createElement("a"))
-                a.textContent = `Error: ${tank.error}`
+                let msg = `Error: ${tank.error}`
                 if (tank.errorPos > 0) {
-                    a.textContent += ` @${tank.errorPos}`
+                    let a = err.appendChild(document.createElement("a"))
                     a.href = '#'
+                    a.msg = `${msg} @${tank.errorPos}`
                     a.addEventListener("click", (event) => {
                         event.preventDefault()
                         let seek = new CustomEvent("goto", {detail: {offset: tank.errorPos}})
                         window.dispatchEvent(seek)
                     })
-                    
+                } else {
+                    err.textContent = msg
                 }
             }
          }
