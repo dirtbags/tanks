@@ -101,24 +101,32 @@ class Replay {
         let TankNames = {}
         let TankColors = {}
         let TotalGames = {}
+        let TotalCrashes = {}
         let TotalKills = {}
         let TotalDeaths = {}
-        let MaxKills = 0
-        let MaxDeaths = 0
         let ngames = 0
         for (let fn of this.fns()) {
             let game = this.games[fn]
             for (let tank of game.tanks) {
                 TotalGames[tank.uid] = (TotalGames[tank.uid] ?? 0) + 1
                 TotalKills[tank.uid] = (TotalKills[tank.uid] ?? 0) + tank.kills
+                TotalCrashes[tank.uid] = (TotalCrashes[tank.uid] ?? 0) + (tank.death == "collision" ? 1 : 0)
                 TotalDeaths[tank.uid] = (TotalDeaths[tank.uid] ?? 0) + (tank.killer == -1 ? 0 : 1)
                 TankNames[tank.uid] = tank.name
                 TankColors[tank.uid] = tank.color
-
-                MaxKills = Math.max(MaxKills, TotalKills[tank.uid])
-                MaxDeaths = Math.max(MaxDeaths, TotalDeaths[tank.uid])
             }
             ngames++
+        }
+
+        let MaxKills = 0
+        let MaxDeaths = 0
+        let MaxCrashes = 0
+        let MinKills = 9999
+        for (let uid in TotalGames) {
+            MaxKills = Math.max(MaxKills, TotalKills[uid])
+            MinKills = Math.min(MinKills, TotalKills[uid])
+            MaxDeaths = Math.max(MaxDeaths, TotalDeaths[uid])
+            MaxCrashes = Math.max(MaxCrashes, TotalCrashes[uid])
         }
 
         let tbody = this.stats.querySelector("tbody")
@@ -148,8 +156,14 @@ class Replay {
             if (TotalKills[uid] == MaxKills) {
                 award.push("ruthless")
             }
+            if (TotalKills[uid] == MinKills) {
+                award.push("stormtrooper")
+            }
             if (TotalDeaths[uid] == MaxDeaths) {
                 award.push("punished")
+            }
+            if (TotalCrashes[uid] == MaxCrashes) {
+                award.push("crashmaster")
             }
             if (TotalDeaths[uid] == TotalGames[uid]) {
                 award.push("unlucky")
@@ -157,19 +171,19 @@ class Replay {
             if (TotalDeaths[uid] == 0) {
                 award.push("invincible")
             }
-            if (TotalGames[uid] >= ngames) {
+            if (TotalGames[uid] == ngames) {
                 if (TotalDeaths[uid] < ngames*0.33) {
                     award.push("stealthy")
                 }
                 if (TotalDeaths[uid] == ngames) {
                     award.push("wasted")
                 }
-                if (TotalGames[uid] > ngames) {
-                    award.push("overachiever")
-                }
                 if (TotalKills[uid] == TotalDeaths[uid]) {
                     award.push("balanced")
                 }
+            }
+            if (TotalGames[uid] > ngames) {
+                award.push("overachiever")
             }
             tr.appendChild(document.createElement("td")).textContent = award.join(", ")
         }
