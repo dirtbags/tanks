@@ -230,7 +230,7 @@ class Replay {
                 if (tank.errorPos > 0) {
                     let a = err.appendChild(document.createElement("a"))
                     a.href = '#'
-                    a.msg = `${msg} @${tank.errorPos}`
+                    a.textContent = `${msg} @${tank.errorPos}`
                     a.addEventListener("click", (event) => {
                         event.preventDefault()
                         let seek = new CustomEvent("goto", {detail: {offset: tank.errorPos}})
