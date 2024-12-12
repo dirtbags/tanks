@@ -26,6 +26,7 @@ struct forftank {
   char name[50];
   char *path;
   unsigned int uid;
+  time_t mtime;
 
   struct forf_stack _prog;
   struct forf_value _progvals[CSTACK_SIZE];
@@ -162,9 +163,10 @@ struct forf_lexical_env tanks_lenv_addons[] = {
  *
  */
 
-int ft_read_file(char *ptr, size_t size, char *dir, char *fn) {
+int ft_read_file(char *ptr, size_t size, time_t *mtime, char *dir, char *fn) {
   char path[256];
   FILE *f = NULL;
+  struct stat st;
   int ret;
   int success = 0;
 
@@ -173,6 +175,10 @@ int ft_read_file(char *ptr, size_t size, char *dir, char *fn) {
     f = fopen(path, "r");
     if (!f)
       break;
+
+    if (-1 != fstat(fileno(f), &st)) {
+      *mtime = max(*mtime, st.st_mtim.tv_sec);
+    }
 
     ret = fread(ptr, 1, size - 1, f);
     ptr[ret] = '\0';
@@ -208,8 +214,10 @@ void ft_run_tank(struct tank *tank, struct forftank *ftank) {
 }
 
 int ft_read_program(struct forftank *ftank, struct tank *tank,
+                    time_t *mtime,
                     struct forf_lexical_env *lenv, char *path) {
   char progpath[256];
+  struct stat st;
   FILE *f;
 
   /* Open program */
@@ -217,6 +225,10 @@ int ft_read_program(struct forftank *ftank, struct tank *tank,
   f = fopen(progpath, "r");
   if (!f)
     return 0;
+
+  if (-1 != fstat(fileno(f), &st)) {
+    *mtime = max(*mtime, st.st_mtim.tv_sec);
+  }
 
   /* Parse program */
   ftank->error_pos = forf_parse_file(&ftank->env, f);
@@ -245,10 +257,8 @@ void ft_tank_init(struct forftank *ftank, struct tank *tank,
                 tank);
 }
 
-void ft_read_sensors(struct tank *tank, char *path) {
-  int i;
-
-  for (i = 0; i < TANK_MAX_SENSORS; i += 1) {
+void ft_read_sensors(time_t *mtime, struct tank *tank, char *path) {
+  for (int i = 0; i < TANK_MAX_SENSORS; i += 1) {
     int ret;
     char fn[10];
     char s[20];
@@ -259,7 +269,7 @@ void ft_read_sensors(struct tank *tank, char *path) {
     long turret;
 
     snprintf(fn, sizeof(fn), "sensor%d", i);
-    ret = ft_read_file(s, sizeof(s), path, fn);
+    ret = ft_read_file(s, sizeof(s), mtime, path, fn);
     if (!ret) {
       s[0] = 0;
     }
@@ -305,7 +315,7 @@ int ft_read_tank(struct forftank *ftank, struct tank *tank,
   }
 
   /* What is your name? */
-  ret = ft_read_file(ftank->name, sizeof(ftank->name), path, "name");
+  ret = ft_read_file(ftank->name, sizeof(ftank->name), &ftank->mtime, path, "name");
   if (!ret) {
     snprintf(ftank->name, sizeof(ftank->name), "i:%x", ftank->uid);
   }
@@ -313,16 +323,16 @@ int ft_read_tank(struct forftank *ftank, struct tank *tank,
 
   /* What is your quest? */
   ft_tank_init(ftank, tank, lenv);
-  ret = ft_read_program(ftank, tank, lenv, path);
+  ret = ft_read_program(ftank, tank, &ftank->mtime, lenv, path);
   if (ret) {
-    ft_read_sensors(tank, path);
+    ft_read_sensors(&ftank->mtime, tank, path);
   } else {
     /* Brick the tank */
     tank_init(tank, ft_bricked_tank, NULL);
   }
 
   /* What is your favorite color? */
-  ret = ft_read_file(ftank->color, sizeof(ftank->color), path, "color");
+  ret = ft_read_file(ftank->color, sizeof(ftank->color), &ftank->mtime, path, "color");
   if (!ret) {
     strncpy(ftank->color, "#808080", sizeof(ftank->color));
   }
@@ -410,6 +420,7 @@ void print_standings(FILE *f, struct forftank *ftanks, struct tank *tanks,
     }
     fprintf(f, "    {\n");
     fprintf(f, "      \"uid\": %d,\n", ftanks[i].uid);
+    fprintf(f, "      \"mtime\": %ld,\n", ftanks[i].mtime);
     fprintf(f, "      \"color\": \"%s\",\n", ftanks[i].color);
     fprintf(f, "      \"name\": \"%s\",\n", ftanks[i].name);
     fprintf(f, "      \"death\": \"%s\",\n", tanks[i].cause_death);
