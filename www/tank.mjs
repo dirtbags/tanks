@@ -15,16 +15,20 @@ export class Tank {
             if (! s) {
                 this.sensors[i] = [0,0,0,0]
             } else {
-                let r = s.range
+                let range = Number(s.range)
+                if (!Number.isFinite(range)) {
+                    range = 0
+                }
+                range = Math.min(Math.max(range, 0), 100)
                 // r, angle, width, turret
                 this.sensors[i] = {
-                    range: s.range,
+                    range: range,
                     beg: s.angle - s.width/2,
                     end: s.angle + s.width/2,
                     turret: s.turret,
                 }
-                if (s.range > this.maxlen) {
-                    this.maxlen = s.range
+                if (range > this.maxlen) {
+                    this.maxlen = range
                 }
             }
         }
