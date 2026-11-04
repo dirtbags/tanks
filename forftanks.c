@@ -278,7 +278,8 @@ void ft_read_sensors(time_t *mtime, struct tank *tank, char *path) {
     width = strtol(p, &p, 0);
     turret = strtol(p, &p, 0);
 
-    tank->sensors[i].range = min(range, TANK_SENSOR_RANGE);
+    range = max(0L, min(range, TANK_SENSOR_RANGE));
+    tank->sensors[i].range = (int)range;
     tank->sensors[i].angle = deg2rad(angle % 360);
     tank->sensors[i].width = deg2rad(width % 360);
     tank->sensors[i].turret = (0 != turret);
