@@ -101,24 +101,32 @@ class Replay {
         let TankNames = {}
         let TankColors = {}
         let TotalGames = {}
+        let TotalCrashes = {}
         let TotalKills = {}
         let TotalDeaths = {}
-        let MaxKills = 0
-        let MaxDeaths = 0
         let ngames = 0
         for (let fn of this.fns()) {
             let game = this.games[fn]
             for (let tank of game.tanks) {
                 TotalGames[tank.uid] = (TotalGames[tank.uid] ?? 0) + 1
                 TotalKills[tank.uid] = (TotalKills[tank.uid] ?? 0) + tank.kills
+                TotalCrashes[tank.uid] = (TotalCrashes[tank.uid] ?? 0) + (tank.death == "collision" ? 1 : 0)
                 TotalDeaths[tank.uid] = (TotalDeaths[tank.uid] ?? 0) + (tank.killer == -1 ? 0 : 1)
                 TankNames[tank.uid] = tank.name
                 TankColors[tank.uid] = tank.color
-
-                MaxKills = Math.max(MaxKills, TotalKills[tank.uid])
-                MaxDeaths = Math.max(MaxDeaths, TotalDeaths[tank.uid])
             }
             ngames++
+        }
+
+        let MaxKills = 0
+        let MaxDeaths = 0
+        let MaxCrashes = 0
+        let MinKills = 9999
+        for (let uid in TotalGames) {
+            MaxKills = Math.max(MaxKills, TotalKills[uid])
+            MinKills = Math.min(MinKills, TotalKills[uid])
+            MaxDeaths = Math.max(MaxDeaths, TotalDeaths[uid])
+            MaxCrashes = Math.max(MaxCrashes, TotalCrashes[uid])
         }
 
         let tbody = this.stats.querySelector("tbody")
@@ -142,29 +150,40 @@ class Replay {
             tr.appendChild(document.createElement("td")).textContent = TotalDeaths[uid]
 
             let award = []
-            if (TotalGames[uid] < 20) {
+            if (TotalGames[uid] < 30) {
                 award.push("noob")
             }
             if (TotalKills[uid] == MaxKills) {
                 award.push("ruthless")
             }
+            if (TotalKills[uid] == MinKills) {
+                award.push("stormtrooper")
+            }
             if (TotalDeaths[uid] == MaxDeaths) {
                 award.push("punished")
+            }
+            if (TotalCrashes[uid] == MaxCrashes) {
+                award.push("crashmaster")
+            }
+            if (TotalDeaths[uid] == TotalGames[uid]) {
+                award.push("unlucky")
             }
             if (TotalDeaths[uid] == 0) {
                 award.push("invincible")
             }
-            if (TotalDeaths[uid] < ngames*0.33) {
-                award.push("stealthy")
-            }
-            if (TotalDeaths[uid] == ngames) {
-                award.push("wasted")
+            if (TotalGames[uid] == ngames) {
+                if (TotalDeaths[uid] < ngames*0.33) {
+                    award.push("stealthy")
+                }
+                if (TotalDeaths[uid] == ngames) {
+                    award.push("wasted")
+                }
+                if (TotalKills[uid] == TotalDeaths[uid]) {
+                    award.push("balanced")
+                }
             }
             if (TotalGames[uid] > ngames) {
                 award.push("overachiever")
-            }
-            if (TotalKills[uid] == TotalDeaths[uid]) {
-                award.push("balanced")
             }
             tr.appendChild(document.createElement("td")).textContent = award.join(", ")
         }
@@ -204,9 +223,25 @@ class Replay {
             tr.appendChild(document.createElement("td")).textContent = tank.kills
             tr.appendChild(document.createElement("td")).textContent = tank.death
             tr.appendChild(document.createElement("td")).textContent = game.tanks[tank.killer]?.name
-            tr.appendChild(document.createElement("td")).textContent = `${tank.error} @${tank.errorPos}`
-        }
-    }
+
+            let err = tr.appendChild(document.createElement("td"))
+            if (tank.error != "None") {
+                let msg = `Error: ${tank.error}`
+                if (tank.errorPos > 0) {
+                    let a = err.appendChild(document.createElement("a"))
+                    a.href = '#'
+                    a.textContent = `${msg} @${tank.errorPos}`
+                    a.addEventListener("click", (event) => {
+                        event.preventDefault()
+                        let seek = new CustomEvent("goto", {detail: {offset: tank.errorPos}})
+                        window.dispatchEvent(seek)
+                    })
+                } else {
+                    err.textContent = msg
+                }
+            }
+         }
+     }
 }
 
 

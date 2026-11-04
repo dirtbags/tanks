@@ -136,7 +136,7 @@ export class Tank {
             this.fire -= 1
         } else {
             if (this.led) {
-                this.ctx.fillStyle = "#f00"
+                this.ctx.fillStyle = "#f80" // It turns your turret orange
             } else {
                 this.ctx.fillStyle = "#000"
             }

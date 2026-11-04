@@ -82,20 +82,21 @@ async function formSubmit(event) {
     if (event.submitter.dataset.script !== undefined) {
         await navigator.clipboard.writeText(`#! /bin/sh
 
-curl -X PUT -d '${files.name}' ${apiURL}name
-curl -X PUT -d '${files.color}' ${apiURL}color
-curl -X PUT -d '${files.author}' ${apiURL}author
-curl -X PUT -d '${files.sensor0}' ${apiURL}sensor0
-curl -X PUT -d '${files.sensor1}' ${apiURL}sensor1
-curl -X PUT -d '${files.sensor2}' ${apiURL}sensor2
-curl -X PUT -d '${files.sensor3}' ${apiURL}sensor3
-curl -X PUT -d '${files.sensor4}' ${apiURL}sensor4
-curl -X PUT -d '${files.sensor5}' ${apiURL}sensor5
-curl -X PUT -d '${files.sensor6}' ${apiURL}sensor6
-curl -X PUT -d '${files.sensor7}' ${apiURL}sensor7
-curl -X PUT -d '${files.sensor8}' ${apiURL}sensor8
-curl -X PUT -d '${files.sensor9}' ${apiURL}sensor9
-curl -X PUT --data-binary @- ${apiURL}program <<'EOD'
+apiURL=${apiURL}
+curl -X PUT -d '${files.name}' \${apiURL}name
+curl -X PUT -d '${files.color}' \${apiURL}color
+curl -X PUT -d '${files.author}' \${apiURL}author
+curl -X PUT -d '${files.sensor0}' \${apiURL}sensor0
+curl -X PUT -d '${files.sensor1}' \${apiURL}sensor1
+curl -X PUT -d '${files.sensor2}' \${apiURL}sensor2
+curl -X PUT -d '${files.sensor3}' \${apiURL}sensor3
+curl -X PUT -d '${files.sensor4}' \${apiURL}sensor4
+curl -X PUT -d '${files.sensor5}' \${apiURL}sensor5
+curl -X PUT -d '${files.sensor6}' \${apiURL}sensor6
+curl -X PUT -d '${files.sensor7}' \${apiURL}sensor7
+curl -X PUT -d '${files.sensor8}' \${apiURL}sensor8
+curl -X PUT -d '${files.sensor9}' \${apiURL}sensor9
+curl -X PUT --data-binary @- \${apiURL}program <<'EOD'
 ${files.program}
 EOD
 `)
@@ -141,44 +142,27 @@ export function init() {
     let form = document.querySelector("form#upload")
     form.addEventListener("submit", formSubmit)
 
-    let tbody = document.querySelector("#sensors tbody")
-    for (let i = 0; i < 10; i++) {
-        let tr = tbody.appendChild(document.createElement("tr"))
-
-        tr.appendChild(document.createElement("td")).textContent = i
-
-        let range = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        range.name = `s${i}r`
-        range.type = "number"
-        range.min = 0
-        range.max = 100
-        range.value = 0
-
-        let angle = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        angle.name = `s${i}a`
-        angle.type = "number"
-        angle.min = -360
-        angle.max = 360
-
-        let width = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        width.name = `s${i}w`
-        width.type = "number"
-        width.min = -360
-        width.max = 360
-
-        let turret = tr.appendChild(document.createElement("td")).appendChild(document.createElement("input"))
-        turret.name = `s${i}t`
-        turret.type = "checkbox"
-    }
-
     // Load in previous values
     for (let e of form.querySelectorAll("[name]")) {
         let v = localStorage.getItem(e.name)
-        if (v !== undefined) {
-            e.checked = (v == "on")
-            e.value = v
+        if (v !== null) {
+            if (e.type == "checkbox") {
+                e.checked = (v == "on")
+            } else {
+                e.value = v
+            }
         }
     }
+
+    window.addEventListener("goto", (event) => {
+        let offset = event.detail.offset
+        let program = document.querySelector("[name=program]")
+        if (!program) {
+            return
+        }
+        program.focus()
+        program.setSelectionRange(offset, offset)
+    })
 
     update(ctx)
     setInterval(() => update(ctx), Second / FPS)

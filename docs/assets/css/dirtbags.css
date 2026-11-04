@@ -119,10 +119,6 @@ dd {
 
 /**** special cases ****/
 
-.wide {
-    max-width: inherit;
-}
-
 figure {
     margin: 0.5em 1em;
     float: right;
@@ -133,18 +129,7 @@ figcaption {
     font-style: italic;
 }
 
-.scoreboard {
-    background: #222;
-}
-
-.scoreboard td {
-    height: 400px;
-}
-
 #battlefield {
     border: 2px solid green;
 }
 
-.solved {
-    text-decoration: line-through;
-}

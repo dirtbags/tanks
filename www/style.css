@@ -79,6 +79,10 @@ nav li .active {
     min-height: 15em;
 }
 
+#upload fieldset.program {
+    flex-direction: column;
+}
+
 #upload fieldset fieldset {
     border-color: #666;
 }
