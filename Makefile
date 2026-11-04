@@ -22,3 +22,6 @@ tanksd: tanksd.go
 clean:
 	rm -f *.o next-round round-*.html
 	rm -f $(BINARIES)
+
+image:
+	docker buildx build --push --tag=git-registry.cyberfire.ninja/devs/tanks:master .
