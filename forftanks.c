@@ -461,7 +461,7 @@ void print_footer(FILE *f) {
 
 int main(int argc, char *argv[]) {
   struct tanks_game game;
-  struct forftank myftanks[MAX_TANKS];
+  struct forftank myftanks[MAX_TANKS] = {0};
   struct tank mytanks[MAX_TANKS];
   struct forf_lexical_env lenv[LENV_SIZE];
   int order[MAX_TANKS];
