@@ -20,7 +20,7 @@ var wwwDir = flag.String("www", "www", "path to www http content (ro)")
 var tanksDir = flag.String("tanks", "tanks", "path to tanks state directories (rw)")
 var roundsDir = flag.String("rounds", "rounds", "path to rounds storage (rw)")
 var maxrounds = flag.Uint("maxrounds", 90, "number of rounds to store")
-var maxSize = flag.Uint("maxsize", 8000 , "maximum uploaded file size")
+var maxSize = flag.Int64("maxsize", 8000 , "maximum uploaded file size")
 var listenAddr = flag.String("listen", ":8080", "where to listen for incoming HTTP connections")
 var roundDuration = flag.Duration("round", 1 * time.Minute, "Time to wait between each round")
 
@@ -56,7 +56,7 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Length required", http.StatusLengthRequired)
 		return
 	}
-	if uint(req.ContentLength) > *maxSize {
+	if req.ContentLength > *maxSize {
 		http.Error(w, "Too large", http.StatusRequestEntityTooLarge)
 		return
 	}
@@ -85,6 +85,7 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer f.Close()
+	req.Body = http.MaxBytesReader(w, req.Body, *maxSize)
 	if _, err := io.Copy(f, req.Body); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -194,6 +195,14 @@ func main() {
 
 	go ts.RunForever()
 
+	server := &http.Server{
+		Addr:              *listenAddr,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+
 	log.Println("Listening on", *listenAddr)
-	http.ListenAndServe(*listenAddr, nil)
+	log.Fatal(server.ListenAndServe())
 }
