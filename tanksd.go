@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"slices"
 	"time"
 )
@@ -44,6 +45,9 @@ var validFilenames = []string{
 	"sensor8",
 	"sensor9",
 }
+
+var validTankID = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+
 func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	id := req.PathValue("id")
 	name := req.PathValue("name")
@@ -62,9 +66,15 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	tankDir := path.Join(ts.dir, id)
-	if tankDir == ts.dir {
+	if !validTankID.MatchString(id) {
 		http.Error(w, "Invalid tank ID", http.StatusBadRequest)
+		return
+	}
+
+	tankDir := path.Join(ts.dir, id)
+	dirInfo, err := os.Lstat(tankDir)
+	if err != nil || !dirInfo.IsDir() || dirInfo.Mode()&os.ModeSymlink != 0 {
+		http.Error(w, "Invalid tank ID", http.StatusNotFound)
 		return
 	}
 
