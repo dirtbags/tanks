@@ -44,7 +44,7 @@ void tank_set_turret(struct tank *tank, float angle) {
 }
 
 int tank_get_sensor(struct tank *tank, int sensor_num) {
-  if ((sensor_num < 0) || (sensor_num > TANK_MAX_SENSORS)) {
+  if ((sensor_num < 0) || (sensor_num >= TANK_MAX_SENSORS)) {
     return 0;
   }
   return tank->sensors[sensor_num].triggered;
