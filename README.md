@@ -45,6 +45,24 @@ If you `cp` it, or remove it and create a new one,
 the scoreboard won't know it's the same tank.
 
 
+Restricting tank names
+----------------
+By default, anyone with a token can set their tank's name
+by uploading the `name` file.
+To prevent that, start the server with `-locknames`:
+
+    $ ./tanksd -locknames
+
+Uploads to `name` are then rejected with `403 Forbidden`,
+and all other files upload as usual.
+Only someone with shell access can set a name,
+by writing the file directly:
+
+    $ echo 'Team Rocket' > tanks/<token>/name
+
+Existing `name` files are left alone, so you can turn the flag on at any time.
+
+
 The `rounds` directory
 -----------------
 
