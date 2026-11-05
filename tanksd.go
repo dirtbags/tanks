@@ -23,6 +23,7 @@ var maxrounds = flag.Uint("maxrounds", 90, "number of rounds to store")
 var maxSize = flag.Int64("maxsize", 8000 , "maximum uploaded file size")
 var listenAddr = flag.String("listen", ":8080", "where to listen for incoming HTTP connections")
 var roundDuration = flag.Duration("round", 1 * time.Minute, "Time to wait between each round")
+var lockNames = flag.Bool("locknames", false, "reject uploads of tank names; names can then only be set by writing the 'name' file in a tank directory on the server")
 
 type TankState struct {
 	dir string
@@ -63,6 +64,12 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if !slices.Contains(validFilenames, name) {
 		http.Error(w, "Invalid filename", http.StatusNotFound)
+		return
+	}
+
+	// Checked before os.Create below, which would truncate an existing name file.
+	if *lockNames && name == "name" {
+		http.Error(w, "Tank names can only be set by the server operator", http.StatusForbidden)
 		return
 	}
 
