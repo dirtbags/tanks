@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"time"
@@ -20,13 +21,13 @@ var wwwDir = flag.String("www", "www", "path to www http content (ro)")
 var tanksDir = flag.String("tanks", "tanks", "path to tanks state directories (rw)")
 var roundsDir = flag.String("rounds", "rounds", "path to rounds storage (rw)")
 var maxrounds = flag.Uint("maxrounds", 90, "number of rounds to store")
-var maxSize = flag.Int64("maxsize", 8000 , "maximum uploaded file size")
+var maxSize = flag.Int64("maxsize", 8000, "maximum uploaded file size")
 var listenAddr = flag.String("listen", ":8080", "where to listen for incoming HTTP connections")
-var roundDuration = flag.Duration("round", 1 * time.Minute, "Time to wait between each round")
+var roundDuration = flag.Duration("round", 1*time.Minute, "Time to wait between each round")
 var lockNames = flag.Bool("locknames", false, "reject uploads of tank names; names can then only be set by writing the 'name' file in a tank directory on the server")
 
 type TankState struct {
-	dir string
+	dir       string
 	roundsdir string
 }
 
@@ -101,6 +102,48 @@ func (ts *TankState) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "%s/%s: written\n", id, name)
 }
 
+func (ts *TankState) ServeTankFile(w http.ResponseWriter, req *http.Request) {
+	id := req.PathValue("id")
+	name := req.PathValue("name")
+	if !validTankID.MatchString(id) || !slices.Contains(validFilenames, name) {
+		http.NotFound(w, req)
+		return
+	}
+
+	tankDir := filepath.Join(ts.dir, id)
+	dirInfo, err := os.Lstat(tankDir)
+	if err != nil || !dirInfo.IsDir() || dirInfo.Mode()&os.ModeSymlink != 0 {
+		http.NotFound(w, req)
+		return
+	}
+
+	filename := filepath.Join(tankDir, name)
+	fileInfo, err := os.Lstat(filename)
+	if err != nil || !fileInfo.Mode().IsRegular() {
+		http.NotFound(w, req)
+		return
+	}
+	f, err := os.Open(filename)
+	if err != nil {
+		http.NotFound(w, req)
+		return
+	}
+	defer f.Close()
+
+	http.ServeContent(w, req, name, fileInfo.ModTime(), f)
+}
+
+func (ts *TankState) HTTPHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("GET /", http.FileServer(http.Dir(*wwwDir)))
+	mux.Handle("GET /rounds/", http.StripPrefix("/rounds/", http.FileServer(http.Dir(ts.roundsdir))))
+	mux.Handle("PUT /tanks/{id}/{name}", ts)
+	mux.HandleFunc("GET /tanks/{id}/{name}", ts.ServeTankFile)
+	// The state directory names are upload credentials, so never list them.
+	mux.Handle("GET /tanks/", http.NotFoundHandler())
+	return mux
+}
+
 func (ts *TankState) WriteRound(now time.Time, round []byte) error {
 	// Write new round
 	roundFn := fmt.Sprintf("%016x.json", now.Unix())
@@ -171,7 +214,7 @@ func (ts *TankState) RunRound(now time.Time) error {
 	if err := ts.WriteRound(now, out); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
@@ -191,19 +234,15 @@ func main() {
 	flag.Parse()
 
 	ts := &TankState{
-		dir: *tanksDir,
+		dir:       *tanksDir,
 		roundsdir: *roundsDir,
 	}
-
-	http.Handle("GET /", http.FileServer(http.Dir(*wwwDir)))
-	http.Handle("GET /rounds/", http.StripPrefix("/rounds/", http.FileServer(http.Dir(*roundsDir))))
-	http.Handle("PUT /tanks/{id}/{name}", ts)
-	http.Handle("GET /tanks/{id}/", http.StripPrefix("/tanks/", http.FileServer(http.Dir(*tanksDir))))
 
 	go ts.RunForever()
 
 	server := &http.Server{
 		Addr:              *listenAddr,
+		Handler:           ts.HTTPHandler(),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
