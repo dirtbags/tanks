@@ -20,6 +20,13 @@ At this point you can connect to http://localhost:8080/ and watch all the
 built-in tanks destroy your motionless tank.
 You can work on your tank with the token `mytank`.
 
+`tanksd` does everything: it takes uploads, plays a round every minute,
+stores the results, and serves the web interface.
+Run `./tanksd -h` to see its options
+(for example `-round 30s` for faster rounds),
+and see [Running Tanks](docs/running.md) for the details,
+including how to change game settings such as cannon range and recharge time.
+
 
 Administering a server
 ==================
@@ -77,6 +84,7 @@ More Documentation
 ============
 
 * [Homepage](https://dirtbags.net/tanks/)
+* [Running Tanks](docs/running.md)
 * [History](docs/history.md)
 * [Thanks](docs/thanks.md)
 
