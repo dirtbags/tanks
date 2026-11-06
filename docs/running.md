@@ -67,6 +67,7 @@ tank directory whose name starts with a dash.
 | `--max-tanks N` | `TANK_MAX_TANKS` | 50 | 2 to 1000 | Most tanks in a game; extra directories are ignored, with a warning. |
 | `--rounds N` | `TANK_ROUNDS` | 500 | 1 to 100000 | Most turns in a game. |
 | `--spacing N` | `TANK_SPACING` | 150 | 1 to 10000 | Initial distance between tanks (the field is one spacing-by-spacing cell per tank). |
+| `--no-collision-credit` | `TANK_COLLISION_CREDIT` | credit on | flag takes no value; variable is exactly `true` or `false` | Collision scoring rule; see the note below. |
 
 *Tank physics*
 
@@ -98,6 +99,17 @@ range (50, with the default sensor range of 100).  It is now a separate
 setting that defaults to 50, so changing `--sensor-range` does not change
 the cannon range.  If you want the traditional ratio, set both.
 
+**Collision scoring.**  When two tanks collide, both are destroyed.  By
+default each is credited with a kill for destroying the other, as in earlier
+versions.  With `--no-collision-credit`, both still die but neither gets a
+kill, so a collision can never raise a tank's score.  The environment
+variable `TANK_COLLISION_CREDIT` does the same when set to `false`; `true` is
+the default rule.  The variable accepts exactly `true` or `false` (lowercase)
+and anything else is an error.  If the command-line flag is given it wins and
+the variable is not examined.  Either way the `killer` field in the standings
+names the tank it collided with, and `death` is `collision`, so viewers and
+scripts that look at those fields keep working; only `kills` changes.
+
 **Warnings.**  Some combinations are accepted but strain the movement or
 collision model, and `forftanks` prints a `warning:` line on standard error
 for each.  The game still runs.  The cases are:
@@ -118,7 +130,7 @@ for each.  The game still runs.  The cases are:
 saved game describes itself.  Keys: `maxSensors`, `radius`, `sensorRange`,
 `cannonRecharge`, `cannonRange`, `maxAccel`, `maxTurretRot` (radians, like
 every other angle in the output), `topSpeed`, `friction`, `dataStackSize`,
-`commandStackSize`, `registers`, `maxTanks`, `rounds`, and `spacing`.
+`commandStackSize`, `registers`, `maxTanks`, `rounds`, `spacing`, and `collisionCredit` (true or false).
 
 **Not everything follows the overrides yet.**  The `tanksd` server accepts
 uploads only for `sensor0` through `sensor9`, and the web designer and

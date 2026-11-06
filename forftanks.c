@@ -35,10 +35,12 @@ static struct {
   int cstack_size;
   int memory_size; /* number of registers */
   double turret_rot_deg; /* --max-turret-rot is given in degrees */
+  int collision_credit;  /* does a collision count as a kill for each tank? */
 } cfg = {
     DEFAULT_MAX_TANKS,  DEFAULT_ROUNDS,     DEFAULT_SPACING,
     0,                  DEFAULT_DSTACK_SIZE, DEFAULT_CSTACK_SIZE,
     DEFAULT_MEMORY_SIZE, 45.0,
+    1, /* stock rule: both tanks are credited with a kill */
 };
 
 struct forftank {
@@ -420,7 +422,9 @@ void print_header(FILE *f, struct tanks_game *game, int seed) {
   fprintf(f, "    \"registers\": %d,\n", cfg.memory_size);
   fprintf(f, "    \"maxTanks\": %d,\n", cfg.max_tanks);
   fprintf(f, "    \"rounds\": %d,\n", cfg.rounds);
-  fprintf(f, "    \"spacing\": %d\n", cfg.spacing);
+  fprintf(f, "    \"spacing\": %d,\n", cfg.spacing);
+  fprintf(f, "    \"collisionCredit\": %s\n",
+          cfg.collision_credit ? "true" : "false");
   fprintf(f, "  },\n");
 }
 
@@ -487,7 +491,12 @@ void print_standings(FILE *f, struct forftank *ftanks, struct tank *tanks,
       if (tanks[i].killer == &(tanks[j])) {
         killer = j;
       }
-      if (tanks[j].killer == &(tanks[i])) {
+      /* A collision kills both tanks.  Unless collision credit is on (the
+       * stock rule), it is not counted as a kill for the other tank.  The
+       * killer index above is reported either way. */
+      if (tanks[j].killer == &(tanks[i]) &&
+          (cfg.collision_credit ||
+           0 != strcmp(tanks[j].cause_death, "collision"))) {
         kills += 1;
       }
     }
@@ -548,7 +557,10 @@ void print_footer(FILE *f) {
  *
  */
 
-enum opt_type { OPT_INT, OPT_REAL };
+/* OPT_BOOL is a setting that is on by default and is turned off by a
+ * command-line flag that takes no argument (--no-NAME).  Its environment
+ * variable takes exactly "true" or "false". */
+enum opt_type { OPT_INT, OPT_REAL, OPT_BOOL };
 
 struct opt {
   const char *group; /* heading in --help */
@@ -585,6 +597,14 @@ static struct opt opts[] = {
      DEFAULT_SPACING, "N",
      "Initial distance between tanks.  The playing field is a grid of "
      "spacing x spacing cells, one per tank.",
+     0},
+    {G_GAME, "no-collision-credit", 0, "TANK_COLLISION_CREDIT", OPT_BOOL,
+     &cfg.collision_credit, 0, 1, 1, "",
+     "When two tanks collide, both are destroyed but neither is credited with "
+     "a kill.  Without this option (the stock rule) each tank is credited "
+     "with a kill for the other.  The \"killer\" in the standings still names "
+     "the other tank either way.  The environment variable "
+     "TANK_COLLISION_CREDIT=false does the same; true is the stock rule.",
      0},
 
     {G_TANK, "max-sensors", 0, "TANK_MAX_SENSORS", OPT_INT,
@@ -688,10 +708,19 @@ static void usage(FILE *f) {
     if (o->shortc) {
       snprintf(sopt, sizeof(sopt), "-%c, ", o->shortc);
     }
-    fprintf(f, "  %s--%s %s\n", sopt, o->name, o->arg);
+    if (*o->arg) {
+      fprintf(f, "  %s--%s %s\n", sopt, o->name, o->arg);
+    } else {
+      fprintf(f, "  %s--%s\n", sopt, o->name);
+    }
     print_wrapped(f, o->help, 8, 78);
-    fprintf(f, "        env: %s   default: %.10g   allowed: %.10g to %.10g\n",
-            o->env, o->def, o->min, o->max);
+    if (o->type == OPT_BOOL) {
+      fprintf(f, "        env: %s (true or false)   default: %s\n", o->env,
+              o->def ? "true" : "false");
+    } else {
+      fprintf(f, "        env: %s   default: %.10g   allowed: %.10g to %.10g\n",
+              o->env, o->def, o->min, o->max);
+    }
   }
 
   fprintf(f, "\nOther options:\n");
@@ -735,6 +764,21 @@ static void opt_apply(struct opt *o, const char *val, const char *source) {
 
   if (!*val) {
     opt_fail(source, "empty value");
+  }
+
+  if (o->type == OPT_BOOL) {
+    /* Only reached for environment variables; the command-line form takes
+     * no value.  Exactly "true" or "false", nothing else. */
+    if (0 == strcmp(val, "true")) {
+      *(int *)o->dest = 1;
+    } else if (0 == strcmp(val, "false")) {
+      *(int *)o->dest = 0;
+    } else {
+      opt_fail(source, "\"%s\" is not valid; use exactly \"true\" or \"false\"",
+               val);
+    }
+    o->seen = 1;
+    return;
   }
 
   errno = 0;
@@ -784,7 +828,8 @@ static int parse_options(int argc, char *argv[]) {
 
   for (int i = 0; i < NOPTS; i += 1) {
     longopts[i].name = opts[i].name;
-    longopts[i].has_arg = required_argument;
+    longopts[i].has_arg =
+        (opts[i].type == OPT_BOOL) ? no_argument : required_argument;
     longopts[i].flag = NULL;
     longopts[i].val = 1000 + i;
   }
@@ -815,8 +860,14 @@ static int parse_options(int argc, char *argv[]) {
     if (!o) {
       abort(); /* programming error */
     }
-    snprintf(source, sizeof(source), "option --%s", o->name);
-    opt_apply(o, optarg, source);
+    if (o->type == OPT_BOOL) {
+      /* --no-NAME: presence turns the setting off */
+      *(int *)o->dest = 0;
+      o->seen = 1;
+    } else {
+      snprintf(source, sizeof(source), "option --%s", o->name);
+      opt_apply(o, optarg, source);
+    }
   }
 
   /* Anything not set on the command line may come from the environment. */
