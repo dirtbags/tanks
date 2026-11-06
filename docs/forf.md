@@ -34,6 +34,12 @@ Integers are stored as the "long" type and have whatever boundaries the
 host CPU and C compiler enforce.  They may be entered in decimal (12),
 octal (014), or hex (0xC), and may be positive or negative.
 
+Addition, subtraction, multiplication, and absolute value report an
+`Overflow` error if the result does not fit in a `long`. Shift counts must
+be nonnegative and smaller than the number of bits in a `long`. Left shift
+also requires a nonnegative input and a result that fits. Right shift
+preserves the sign, rounding negative values toward negative infinity.
+
 The following are valid integers:
 
 * 58

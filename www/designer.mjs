@@ -1,4 +1,5 @@
 import {Tank} from "./tank.mjs"
+import {buildUploadScript} from "./upload-script.mjs"
 
 Math.TAU = Math.PI * 2
 const Millisecond = 1
@@ -80,26 +81,7 @@ async function formSubmit(event) {
 
     // Did the submit button have a "data-script" attribute?
     if (event.submitter.dataset.script !== undefined) {
-        await navigator.clipboard.writeText(`#! /bin/sh
-
-apiURL=${apiURL}
-curl -X PUT -d '${files.name}' \${apiURL}name
-curl -X PUT -d '${files.color}' \${apiURL}color
-curl -X PUT -d '${files.author}' \${apiURL}author
-curl -X PUT -d '${files.sensor0}' \${apiURL}sensor0
-curl -X PUT -d '${files.sensor1}' \${apiURL}sensor1
-curl -X PUT -d '${files.sensor2}' \${apiURL}sensor2
-curl -X PUT -d '${files.sensor3}' \${apiURL}sensor3
-curl -X PUT -d '${files.sensor4}' \${apiURL}sensor4
-curl -X PUT -d '${files.sensor5}' \${apiURL}sensor5
-curl -X PUT -d '${files.sensor6}' \${apiURL}sensor6
-curl -X PUT -d '${files.sensor7}' \${apiURL}sensor7
-curl -X PUT -d '${files.sensor8}' \${apiURL}sensor8
-curl -X PUT -d '${files.sensor9}' \${apiURL}sensor9
-curl -X PUT --data-binary @- \${apiURL}program <<'EOD'
-${files.program}
-EOD
-`)
+        await navigator.clipboard.writeText(buildUploadScript(apiURL, files))
         debug("Upload script copied to clipboard.")
         return
     }

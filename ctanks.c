@@ -264,7 +264,7 @@ void tanks_move_tank(struct tanks_game *game, struct tank *tank) {
     v[1] = tank->speed.current[1] * (1 - friction) * (TANK_TOP_SPEED / 100.0);
 
     /* Outside and inside speeds */
-    if (fabsf(v[0]) > abs(v[1])) {
+    if (fabsf(v[0]) > fabsf(v[1])) {
       Si = v[1];
       So = v[0];
       dir = 1;
