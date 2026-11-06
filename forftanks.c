@@ -299,6 +299,13 @@ void ft_tank_init(struct forftank *ftank, struct tank *tank,
                 tank);
 }
 
+static void ft_tank_destroy(struct forftank *ftank) {
+  free(ftank->_progvals);
+  free(ftank->_cmdvals);
+  free(ftank->_datavals);
+  free(ftank->_memvals);
+}
+
 void ft_read_sensors(time_t *mtime, struct tank *tank, char *path) {
   for (int i = 0; i < TANK_MAX_SENSORS; i += 1) {
     int ret;
@@ -1004,6 +1011,13 @@ int main(int argc, char *argv[]) {
   print_rounds(stdout, &game, mytanks, ntanks);
   print_standings(stdout, myftanks, mytanks, ntanks);
   print_footer(stdout);
+
+  for (i = 0; i < ntanks; i += 1) {
+    ft_tank_destroy(&myftanks[i]);
+  }
+  free(order);
+  free(mytanks);
+  free(myftanks);
 
   return 0;
 }
