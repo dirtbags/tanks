@@ -20,6 +20,91 @@
 
 #define sq(x) ((x) * (x))
 
+/* Active game parameters; see ctanks.h.  The derived fields below must match
+ * what tank_params_finalize() would compute from the defaults. */
+struct tank_params tank_cfg = {
+    TANK_DEFAULT_MAX_SENSORS,
+    TANK_DEFAULT_RADIUS,
+    TANK_DEFAULT_SENSOR_RANGE,
+    TANK_DEFAULT_CANNON_RECHARGE,
+    TANK_DEFAULT_CANNON_RANGE,
+    TANK_DEFAULT_MAX_ACCEL,
+    TANK_DEFAULT_MAX_TURRET_ROT,
+    TANK_DEFAULT_TOP_SPEED,
+    TANK_DEFAULT_FRICTION,
+    (TANK_DEFAULT_RADIUS + TANK_DEFAULT_RADIUS) *
+        (TANK_DEFAULT_RADIUS + TANK_DEFAULT_RADIUS),
+    (TANK_DEFAULT_SENSOR_RANGE + TANK_DEFAULT_RADIUS) *
+        (TANK_DEFAULT_SENSOR_RANGE + TANK_DEFAULT_RADIUS),
+    (TANK_DEFAULT_CANNON_RANGE + TANK_DEFAULT_RADIUS) *
+        (TANK_DEFAULT_CANNON_RANGE + TANK_DEFAULT_RADIUS),
+};
+
+void tank_params_finalize(struct tank_params *p) {
+  p->collision_adj2 = (p->radius + p->radius) * (p->radius + p->radius);
+  p->sensor_adj2 = (p->sensor_range + p->radius) * (p->sensor_range + p->radius);
+  p->cannon_adj2 = (p->cannon_range + p->radius) * (p->cannon_range + p->radius);
+}
+
+/* Worst-case rotation (radians) a tank can make in one turn.  When the treads
+ * differ, tanks_move_tank rotates by theta = (So - Si) / (2 * radius) and
+ * then moves r * tan(theta).  tan() is singular at 90 degrees, and inflates
+ * movement well before that.  The tread-speed difference after friction is
+ * g(d) = d * (1 - F*d/200) * top_speed/100 for a raw difference d in
+ * [0, 200]; g peaks at d = 100/F (or d = 200 when F <= 0.5). */
+static double worst_turn(double radius, double top_speed, double friction) {
+  double d = (friction > 0.5) ? (100.0 / friction) : 200.0;
+  double g = d * (1.0 - friction * d / 200.0) * (top_speed / 100.0);
+
+  return g / (2.0 * radius);
+}
+
+int tank_params_check(const struct tank_params *p, double spacing, FILE *out) {
+  int n = 0;
+  double theta = worst_turn(p->radius, p->top_speed, p->friction);
+  double stock = worst_turn(TANK_DEFAULT_RADIUS, TANK_DEFAULT_TOP_SPEED,
+                            TANK_DEFAULT_FRICTION);
+
+  if (theta >= PI / 2) {
+    fprintf(out,
+            "warning: turning model: worst-case rotation is %.1f degrees per "
+            "turn, at or past the 90-degree singularity of tan(); tanks may "
+            "move backwards or get NaN positions (reduce top speed, increase "
+            "radius, or raise friction)\n",
+            theta * 180 / PI);
+    n += 1;
+  } else if (theta >= 0.8) {
+    fprintf(out,
+            "warning: turning model: worst-case rotation is %.1f degrees per "
+            "turn (stock: %.1f); turning tanks move %.2fx farther than the "
+            "arc they follow, and tan() blows up at 90 degrees\n",
+            theta * 180 / PI, stock * 180 / PI, tan(theta) / theta);
+    n += 1;
+  }
+
+  /* Collisions are only tested between end-of-turn positions, so two tanks
+   * closing head-on faster than twice the collision diameter can swap
+   * places without ever overlapping. */
+  if (p->top_speed >= 2 * p->radius) {
+    fprintf(out,
+            "warning: top speed %g is at least twice the tank radius %g; "
+            "tanks can pass through each other without a collision being "
+            "detected\n",
+            p->top_speed, p->radius);
+    n += 1;
+  }
+
+  if (spacing > 0 && spacing < 2 * p->radius) {
+    fprintf(out,
+            "warning: initial spacing %g is less than the collision diameter "
+            "%g; tanks will start out colliding\n",
+            spacing, 2 * p->radius);
+    n += 1;
+  }
+
+  return n;
+}
+
 void tank_init(struct tank *tank, tank_run_func *run, void *udata) {
   memset(tank, 0, sizeof(*tank));
   tank->run = run;
