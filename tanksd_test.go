@@ -84,3 +84,27 @@ func TestTankDownloadRejectsSymlinks(t *testing.T) {
 		}
 	}
 }
+
+func TestUploadedHTMLIsServedAsText(t *testing.T) {
+	ts, id := testTankState(t)
+	handler := ts.HTTPHandler()
+	target := "/tanks/" + id + "/author"
+	payload := `<!doctype html><script>document.title=localStorage.getItem("id")</script>`
+
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest(http.MethodPut, target, strings.NewReader(payload)))
+	if w.Code != http.StatusOK {
+		t.Fatalf("upload: status %d, body %q", w.Code, w.Body.String())
+	}
+
+	for _, method := range []string{http.MethodGet, http.MethodHead} {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest(method, target, nil))
+		if w.Code != http.StatusOK || w.Header().Get("Content-Type") != "text/plain; charset=utf-8" || w.Header().Get("X-Content-Type-Options") != "nosniff" {
+			t.Fatalf("%s: status %d, headers %v", method, w.Code, w.Header())
+		}
+		if method == http.MethodGet && w.Body.String() != payload {
+			t.Fatalf("download changed uploaded text: %q", w.Body.String())
+		}
+	}
+}

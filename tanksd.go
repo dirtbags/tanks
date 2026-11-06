@@ -130,6 +130,9 @@ func (ts *TankState) ServeTankFile(w http.ResponseWriter, req *http.Request) {
 	}
 	defer f.Close()
 
+	// Tank files are untrusted text, even when they contain HTML or SVG.
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	http.ServeContent(w, req, name, fileInfo.ModTime(), f)
 }
 
