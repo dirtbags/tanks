@@ -5,6 +5,7 @@ stages:
 workflow:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG'
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
       when: never
     - if: '$CI_COMMIT_BRANCH'
@@ -13,6 +14,7 @@ workflow:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG'
     - if: '$CI_COMMIT_BRANCH'
 
 go-check:
@@ -78,8 +80,10 @@ javascript-check:
 publish:
   stage: publish
   rules:
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG'
     - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
   script:
+    - image_tag="${CI_COMMIT_TAG:-$CI_COMMIT_REF_NAME}"
     - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
-    - docker build --tag="$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME" -f Dockerfile .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME"
+    - docker build --tag="$CI_REGISTRY_IMAGE:$image_tag" -f Dockerfile .
+    - docker push "$CI_REGISTRY_IMAGE:$image_tag"
