@@ -19,9 +19,16 @@ ctanks.o: ctanks.h
 tanksd: tanksd.go
 	go build $<
 
+forf-test: tests/forf_test.c forf.c forf.h
+	$(CC) $(CPPFLAGS) $(CFLAGS) -I. -o $@ tests/forf_test.c forf.c
+
+.PHONY: test-forf
+test-forf: forf-test
+	./forf-test
+
 clean:
 	rm -f *.o next-round round-*.html
-	rm -f $(BINARIES)
+	rm -f $(BINARIES) forf-test
 
 image:
 	docker buildx build --push --tag=git-registry.cyberfire.ninja/devs/tanks:master .

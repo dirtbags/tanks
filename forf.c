@@ -276,12 +276,57 @@ unproc(inv, ~) unproc(not, !)
     forf_push_num(env, b op a);                                                \
   }
 
-    binproc(add, +) binproc(sub, -) binproc(mul, *) binproc(and, &)
-        binproc(or, |) binproc(xor, ^) binproc(lshift, <<) binproc(rshift, >>)
-            binproc(gt, >) binproc(ge, >=) binproc(lt, <) binproc(le, <=)
-                binproc(eq, ==) binproc(ne, !=)
+binproc(and, &) binproc(or, |) binproc(xor, ^)
+    binproc(gt, >) binproc(ge, >=) binproc(lt, <) binproc(le, <=)
+        binproc(eq, ==) binproc(ne, !=)
 
-                    static void forf_proc_div(struct forf_env *env) {
+#define checked_binproc(name, operation)                                       \
+  static void forf_proc_##name(struct forf_env *env) {                         \
+    long a = forf_pop_num(env);                                                \
+    long b = forf_pop_num(env);                                                \
+    long result;                                                              \
+    if (env->error)                                                           \
+      return;                                                                 \
+    if (operation(b, a, &result)) {                                           \
+      env->error = forf_error_overflow;                                       \
+      return;                                                                 \
+    }                                                                         \
+    forf_push_num(env, result);                                                \
+  }
+
+checked_binproc(add, __builtin_add_overflow)
+checked_binproc(sub, __builtin_sub_overflow)
+checked_binproc(mul, __builtin_mul_overflow)
+
+static void forf_proc_lshift(struct forf_env *env) {
+  long a = forf_pop_num(env);
+  long b = forf_pop_num(env);
+
+  if (env->error)
+    return;
+  if (a < 0 || (unsigned long)a >= sizeof(long) * CHAR_BIT || b < 0 ||
+      b > (LONG_MAX >> a)) {
+    env->error = forf_error_overflow;
+    return;
+  }
+  forf_push_num(env, b << a);
+}
+
+static void forf_proc_rshift(struct forf_env *env) {
+  long a = forf_pop_num(env);
+  long b = forf_pop_num(env);
+
+  if (env->error)
+    return;
+  if (a < 0 || (unsigned long)a >= sizeof(long) * CHAR_BIT) {
+    env->error = forf_error_overflow;
+    return;
+  }
+  // Define arithmetic right shift without shifting a negative signed value.
+  forf_push_num(env, b < 0 ? -1 - (-(b + 1) >> a) : b >> a);
+}
+
+static void forf_proc_div(struct forf_env *env) {
   long a = forf_pop_num(env);
   long b = forf_pop_num(env);
 
@@ -304,7 +349,15 @@ static void forf_proc_mod(struct forf_env *env) {
 }
 
 static void forf_proc_abs(struct forf_env *env) {
-  forf_push_num(env, abs(forf_pop_num(env)));
+  long a = forf_pop_num(env);
+
+  if (env->error)
+    return;
+  if (a == LONG_MIN) {
+    env->error = forf_error_overflow;
+    return;
+  }
+  forf_push_num(env, a < 0 ? -a : a);
 }
 
 static void forf_proc_dup(struct forf_env *env) {
