@@ -436,7 +436,10 @@ void print_rounds(FILE *f, struct tanks_game *game, struct tank *tanks,
 
   /* Run rounds */
   alive = ntanks;
-  for (int i = 0; (alive > 1) && (i < cfg.rounds); i += 1) {
+  /* A game normally ends when at most one tank is left.  A game that starts
+   * with a single tank can never end that way (nothing can kill it), so it
+   * runs for the full number of rounds. */
+  for (int i = 0; (ntanks == 1 || alive > 1) && (i < cfg.rounds); i += 1) {
     if (i > 0) {
       fprintf(f, ",\n");
     }
@@ -585,9 +588,12 @@ static struct opt opts[] = {
      "Random seed for tank placement and the forf random word.  0 means use "
      "the process ID.",
      0},
-    {G_GAME, "max-tanks", 0, "TANK_MAX_TANKS", OPT_INT, &cfg.max_tanks, 2, 1000,
+    {G_GAME, "max-tanks", 0, "TANK_MAX_TANKS", OPT_INT, &cfg.max_tanks, 1, 1000,
      DEFAULT_MAX_TANKS, "N",
-     "Maximum number of tanks in the game.  Extra TANKDIRs are ignored.", 0},
+     "Maximum number of tanks in the game.  Extra TANKDIRs are ignored.  A "
+     "game with a single tank is allowed; it runs for the full number of "
+     "rounds.",
+     0},
     {G_GAME, "rounds", 0, "TANK_ROUNDS", OPT_INT, &cfg.rounds, 1, 100000,
      DEFAULT_ROUNDS, "N",
      "Maximum number of rounds (turns).  The game ends sooner if at most one "

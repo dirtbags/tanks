@@ -64,7 +64,7 @@ tank directory whose name starts with a dash.
 | Option | Environment | Default | Allowed | Meaning |
 |--------|-------------|---------|---------|---------|
 | `-s`, `--seed N` | `SEED` | 0 | any 32-bit integer | Random seed.  0 means use the process ID. |
-| `--max-tanks N` | `TANK_MAX_TANKS` | 50 | 2 to 1000 | Most tanks in a game; extra directories are ignored, with a warning. |
+| `--max-tanks N` | `TANK_MAX_TANKS` | 50 | 1 to 1000 | Most tanks in a game; extra directories are ignored, with a warning. |
 | `--rounds N` | `TANK_ROUNDS` | 500 | 1 to 100000 | Most turns in a game. |
 | `--spacing N` | `TANK_SPACING` | 150 | 1 to 10000 | Initial distance between tanks (the field is one spacing-by-spacing cell per tank). |
 | `--no-collision-credit` | `TANK_COLLISION_CREDIT` | credit on | flag takes no value; variable is exactly `true` or `false` | Collision scoring rule; see the note below. |
@@ -98,6 +98,13 @@ the same seed and tanks.
 range (50, with the default sensor range of 100).  It is now a separate
 setting that defaults to 50, so changing `--sensor-range` does not change
 the cannon range.  If you want the traditional ratio, set both.
+
+**Single-tank games.**  Giving `forftanks` one tank directory is allowed and
+useful for smoke-testing a design: the tank's program runs every turn, and
+the game lasts for the full number of rounds because nothing can end it.  The
+tank always survives (`death` is `(null)`).  With nothing else on the field,
+its sensors never trigger and it has nothing to shoot or hit, so test sensor
+logic against a second tank, such as the stationary `easy-brick`.
 
 **Collision scoring.**  When two tanks collide, both are destroyed.  By
 default each is credited with a kill for destroying the other, as in earlier

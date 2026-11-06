@@ -399,8 +399,10 @@ void tanks_run_turn(struct tanks_game *game, struct tank *tanks, int ntanks) {
   float vector[2];
   float dist2; /* distance squared */
 
-  /* It takes (at least) two to tank-o */
-  if (ntanks < 2) {
+  /* It takes (at least) two to tank-o, but a lone tank may still drive around
+   * (handy for smoke-testing a design).  With one tank there are no pairs, so
+   * nothing can be sensed, shot, or collided with. */
+  if (ntanks < 1) {
     return;
   }
 
