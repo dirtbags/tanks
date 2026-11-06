@@ -1,6 +1,10 @@
 #include "ctanks.h"
 #include "dump.h"
 #include "forf.h"
+#include <errno.h>
+#include <stdarg.h>
+#include <getopt.h>
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,15 +13,35 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define MAX_TANKS 50
-#define ROUNDS 500
-#define SPACING 150
-
 #define LENV_SIZE 100
 
-#define DSTACK_SIZE 500
-#define CSTACK_SIZE 500
-#define MEMORY_SIZE 10
+/* Defaults for everything an operator may override at run time.  The tank
+ * physics defaults live in ctanks.h (TANK_DEFAULT_*). */
+#define DEFAULT_MAX_TANKS 50
+#define DEFAULT_ROUNDS 500
+#define DEFAULT_SPACING 150
+#define DEFAULT_DSTACK_SIZE 500
+#define DEFAULT_CSTACK_SIZE 500
+#define DEFAULT_MEMORY_SIZE 10
+
+/* Run-time settings that are not tank physics.  Set once in main(), before
+ * any tank is loaded. */
+static struct {
+  int max_tanks;
+  int rounds;
+  int spacing; /* initial distance between tanks */
+  int seed;    /* 0 means "use the process ID" */
+  int dstack_size;
+  int cstack_size;
+  int memory_size; /* number of registers */
+  double turret_rot_deg; /* --max-turret-rot is given in degrees */
+  int collision_credit;  /* does a collision count as a kill for each tank? */
+} cfg = {
+    DEFAULT_MAX_TANKS,  DEFAULT_ROUNDS,     DEFAULT_SPACING,
+    0,                  DEFAULT_DSTACK_SIZE, DEFAULT_CSTACK_SIZE,
+    DEFAULT_MEMORY_SIZE, 45.0,
+    1, /* stock rule: both tanks are credited with a kill */
+};
 
 struct forftank {
   struct forf_env env;
@@ -28,14 +52,16 @@ struct forftank {
   unsigned int uid;
   time_t mtime;
 
+  /* Stack and register storage is sized at run time (cfg.*_size) and
+   * allocated, zeroed, by ft_tank_init(). */
   struct forf_stack _prog;
-  struct forf_value _progvals[CSTACK_SIZE];
+  struct forf_value *_progvals;
   struct forf_stack _cmd;
-  struct forf_value _cmdvals[CSTACK_SIZE];
+  struct forf_value *_cmdvals;
   struct forf_stack _data;
-  struct forf_value _datavals[DSTACK_SIZE];
+  struct forf_value *_datavals;
   struct forf_memory _mem;
-  long _memvals[MEMORY_SIZE];
+  long *_memvals;
 };
 
 #ifndef NODEBUG
@@ -246,13 +272,29 @@ int ft_read_program(struct forftank *ftank, struct tank *tank,
   return 1;
 }
 
+static void *ft_calloc(size_t n, size_t size) {
+  /* calloc zeroes, which also gives forf registers a defined initial value */
+  void *p = calloc(n ? n : 1, size);
+
+  if (!p) {
+    fprintf(stderr, "Out of memory allocating %zu x %zu bytes.\n", n, size);
+    exit(1);
+  }
+  return p;
+}
+
 void ft_tank_init(struct forftank *ftank, struct tank *tank,
                   struct forf_lexical_env *lenv) {
+  ftank->_progvals = ft_calloc(cfg.cstack_size, sizeof(*ftank->_progvals));
+  ftank->_cmdvals = ft_calloc(cfg.cstack_size, sizeof(*ftank->_cmdvals));
+  ftank->_datavals = ft_calloc(cfg.dstack_size, sizeof(*ftank->_datavals));
+  ftank->_memvals = ft_calloc(cfg.memory_size, sizeof(*ftank->_memvals));
+
   /* Set up forf environment */
-  forf_stack_init(&ftank->_prog, ftank->_progvals, CSTACK_SIZE);
-  forf_stack_init(&ftank->_cmd, ftank->_cmdvals, CSTACK_SIZE);
-  forf_stack_init(&ftank->_data, ftank->_datavals, DSTACK_SIZE);
-  forf_memory_init(&ftank->_mem, ftank->_memvals, MEMORY_SIZE);
+  forf_stack_init(&ftank->_prog, ftank->_progvals, cfg.cstack_size);
+  forf_stack_init(&ftank->_cmd, ftank->_cmdvals, cfg.cstack_size);
+  forf_stack_init(&ftank->_data, ftank->_datavals, cfg.dstack_size);
+  forf_memory_init(&ftank->_mem, ftank->_memvals, cfg.memory_size);
   forf_env_init(&ftank->env, lenv, &ftank->_data, &ftank->_cmd, &ftank->_mem,
                 tank);
 }
@@ -283,6 +325,20 @@ void ft_read_sensors(time_t *mtime, struct tank *tank, char *path) {
     tank->sensors[i].angle = deg2rad(angle % 360);
     tank->sensors[i].width = deg2rad(width % 360);
     tank->sensors[i].turret = (0 != turret);
+  }
+
+  /* Sensor files beyond the configured maximum are never read; say so rather
+   * than silently dropping them. */
+  for (int i = TANK_MAX_SENSORS; i < TANK_SENSORS_HARD_MAX; i += 1) {
+    char fn[256];
+
+    snprintf(fn, sizeof(fn), "%s/sensor%d", path, i);
+    if (0 == access(fn, F_OK)) {
+      fprintf(stderr,
+              "warning: %s: ignoring sensor%d (only %d sensors enabled; see "
+              "--max-sensors)\n",
+              path, i, TANK_MAX_SENSORS);
+    }
   }
 }
 
@@ -343,9 +399,33 @@ int ft_read_tank(struct forftank *ftank, struct tank *tank,
 }
 
 void print_header(FILE *f, struct tanks_game *game, int seed) {
+  const struct tank_params *p = &tank_cfg;
+
   fprintf(f, "{\n");
   fprintf(f, "  \"seed\": %d,\n", seed);
   fprintf(f, "  \"field\": [%d,%d],\n", (int)game->size[0], (int)game->size[1]);
+
+  /* The effective settings for this game, whether default or overridden.
+   * Angles are radians, like everywhere else in the output. */
+  fprintf(f, "  \"params\": {\n");
+  fprintf(f, "    \"maxSensors\": %d,\n", p->max_sensors);
+  fprintf(f, "    \"radius\": %.9g,\n", p->radius);
+  fprintf(f, "    \"sensorRange\": %d,\n", p->sensor_range);
+  fprintf(f, "    \"cannonRecharge\": %d,\n", p->cannon_recharge);
+  fprintf(f, "    \"cannonRange\": %d,\n", p->cannon_range);
+  fprintf(f, "    \"maxAccel\": %d,\n", p->max_accel);
+  fprintf(f, "    \"maxTurretRot\": %.9g,\n", p->max_turret_rot);
+  fprintf(f, "    \"topSpeed\": %.9g,\n", p->top_speed);
+  fprintf(f, "    \"friction\": %.9g,\n", p->friction);
+  fprintf(f, "    \"dataStackSize\": %d,\n", cfg.dstack_size);
+  fprintf(f, "    \"commandStackSize\": %d,\n", cfg.cstack_size);
+  fprintf(f, "    \"registers\": %d,\n", cfg.memory_size);
+  fprintf(f, "    \"maxTanks\": %d,\n", cfg.max_tanks);
+  fprintf(f, "    \"rounds\": %d,\n", cfg.rounds);
+  fprintf(f, "    \"spacing\": %d,\n", cfg.spacing);
+  fprintf(f, "    \"collisionCredit\": %s\n",
+          cfg.collision_credit ? "true" : "false");
+  fprintf(f, "  },\n");
 }
 
 void print_rounds(FILE *f, struct tanks_game *game, struct tank *tanks,
@@ -356,7 +436,10 @@ void print_rounds(FILE *f, struct tanks_game *game, struct tank *tanks,
 
   /* Run rounds */
   alive = ntanks;
-  for (int i = 0; (alive > 1) && (i < ROUNDS); i += 1) {
+  /* A game normally ends when at most one tank is left.  A game that starts
+   * with a single tank can never end that way (nothing can kill it), so it
+   * runs for the full number of rounds. */
+  for (int i = 0; (ntanks == 1 || alive > 1) && (i < cfg.rounds); i += 1) {
     if (i > 0) {
       fprintf(f, ",\n");
     }
@@ -411,7 +494,12 @@ void print_standings(FILE *f, struct forftank *ftanks, struct tank *tanks,
       if (tanks[i].killer == &(tanks[j])) {
         killer = j;
       }
-      if (tanks[j].killer == &(tanks[i])) {
+      /* A collision kills both tanks.  Unless collision credit is on (the
+       * stock rule), it is not counted as a kill for the other tank.  The
+       * killer index above is reported either way. */
+      if (tanks[j].killer == &(tanks[i]) &&
+          (cfg.collision_credit ||
+           0 != strcmp(tanks[j].cause_death, "collision"))) {
         kills += 1;
       }
     }
@@ -460,15 +548,377 @@ void print_footer(FILE *f) {
   fprintf(f, "}\n");
 }
 
+/*
+ *
+ * Run-time options
+ *
+ * Every setting an operator may override is one row in opts[].  The same
+ * table drives command-line parsing, environment-variable parsing, range
+ * checking, and the --help text, so they cannot drift apart.
+ *
+ * Precedence: command-line option, then environment variable, then default.
+ *
+ */
+
+/* OPT_BOOL is a setting that is on by default and is turned off by a
+ * command-line flag that takes no argument (--no-NAME).  Its environment
+ * variable takes exactly "true" or "false". */
+enum opt_type { OPT_INT, OPT_REAL, OPT_BOOL };
+
+struct opt {
+  const char *group; /* heading in --help */
+  const char *name;  /* long option, without the leading -- */
+  int shortc;        /* short option character, or 0 */
+  const char *env;   /* environment variable */
+  enum opt_type type;
+  void *dest; /* int * or double *, per type */
+  double min, max; /* inclusive limits */
+  double def;      /* default, for --help only; the real default is in dest */
+  const char *arg; /* argument name, for --help */
+  const char *help;
+  int seen; /* set once a value has been applied */
+};
+
+#define G_GAME "Game options"
+#define G_TANK "Tank physics options"
+#define G_FORF "Forf interpreter options (per tank)"
+
+static struct opt opts[] = {
+    {G_GAME, "seed", 's', "SEED", OPT_INT, &cfg.seed, INT_MIN, INT_MAX, 0, "N",
+     "Random seed for tank placement and the forf random word.  0 means use "
+     "the process ID.",
+     0},
+    {G_GAME, "max-tanks", 0, "TANK_MAX_TANKS", OPT_INT, &cfg.max_tanks, 1, 1000,
+     DEFAULT_MAX_TANKS, "N",
+     "Maximum number of tanks in the game.  Extra TANKDIRs are ignored.  A "
+     "game with a single tank is allowed; it runs for the full number of "
+     "rounds.",
+     0},
+    {G_GAME, "rounds", 0, "TANK_ROUNDS", OPT_INT, &cfg.rounds, 1, 100000,
+     DEFAULT_ROUNDS, "N",
+     "Maximum number of rounds (turns).  The game ends sooner if at most one "
+     "tank is left alive.",
+     0},
+    {G_GAME, "spacing", 0, "TANK_SPACING", OPT_INT, &cfg.spacing, 1, 10000,
+     DEFAULT_SPACING, "N",
+     "Initial distance between tanks.  The playing field is a grid of "
+     "spacing x spacing cells, one per tank.",
+     0},
+    {G_GAME, "no-collision-credit", 0, "TANK_COLLISION_CREDIT", OPT_BOOL,
+     &cfg.collision_credit, 0, 1, 1, "",
+     "When two tanks collide, both are destroyed but neither is credited with "
+     "a kill.  Without this option (the stock rule) each tank is credited "
+     "with a kill for the other.  The \"killer\" in the standings still names "
+     "the other tank either way.  The environment variable "
+     "TANK_COLLISION_CREDIT=false does the same; true is the stock rule.",
+     0},
+
+    {G_TANK, "max-sensors", 0, "TANK_MAX_SENSORS", OPT_INT,
+     &tank_cfg.max_sensors, 1, TANK_SENSORS_HARD_MAX,
+     TANK_DEFAULT_MAX_SENSORS, "N",
+     "Number of sensors per tank (files sensor0 .. sensorN-1).", 0},
+    {G_TANK, "radius", 0, "TANK_RADIUS", OPT_REAL, &tank_cfg.radius, 0.1, 500,
+     TANK_DEFAULT_RADIUS, "R", "Tank radius.", 0},
+    {G_TANK, "sensor-range", 0, "TANK_SENSOR_RANGE", OPT_INT,
+     &tank_cfg.sensor_range, 1, 1000, TANK_DEFAULT_SENSOR_RANGE, "N",
+     "Longest range a sensor may have.  Longer ranges in sensor files are "
+     "clamped to this.",
+     0},
+    {G_TANK, "cannon-recharge", 0, "TANK_CANNON_RECHARGE", OPT_INT,
+     &tank_cfg.cannon_recharge, 0, 1000, TANK_DEFAULT_CANNON_RECHARGE, "N",
+     "Turns needed to recharge the cannon after firing.", 0},
+    {G_TANK, "cannon-range", 0, "TANK_CANNON_RANGE", OPT_INT,
+     &tank_cfg.cannon_range, 1, 1000, TANK_DEFAULT_CANNON_RANGE, "N",
+     "Cannon range.  Traditionally half the sensor range, but independent of "
+     "it: see NOTES.",
+     0},
+    {G_TANK, "max-accel", 0, "TANK_MAX_ACCEL", OPT_INT, &tank_cfg.max_accel, 1,
+     200, TANK_DEFAULT_MAX_ACCEL, "N",
+     "Most a tread's speed (-100..100) may change in one turn.", 0},
+    {G_TANK, "max-turret-rot", 0, "TANK_MAX_TURRET_ROT", OPT_REAL,
+     &cfg.turret_rot_deg, 0.1, 360, 45, "DEG",
+     "Most the turret can rotate in one turn, in degrees (stock: 45, which "
+     "is tau/8 radians).",
+     0},
+    {G_TANK, "top-speed", 0, "TANK_TOP_SPEED", OPT_REAL, &tank_cfg.top_speed,
+     0.01, 1000, TANK_DEFAULT_TOP_SPEED, "V",
+     "Distance a tank moves per turn with both treads at 100.", 0},
+    {G_TANK, "friction", 0, "TANK_FRICTION", OPT_REAL, &tank_cfg.friction, 0, 1,
+     TANK_DEFAULT_FRICTION, "F",
+     "Speed penalty when the treads run at different speeds.", 0},
+
+    {G_FORF, "dstack", 0, "FORF_DSTACK_SIZE", OPT_INT, &cfg.dstack_size, 1,
+     16384, DEFAULT_DSTACK_SIZE, "N", "Data stack size, in values.", 0},
+    {G_FORF, "cstack", 0, "FORF_CSTACK_SIZE", OPT_INT, &cfg.cstack_size, 1,
+     16384, DEFAULT_CSTACK_SIZE, "N",
+     "Command stack size, in values.  This also bounds program length.", 0},
+    {G_FORF, "registers", 0, "FORF_REGISTERS", OPT_INT, &cfg.memory_size, 0,
+     4096, DEFAULT_MEMORY_SIZE, "N",
+     "Number of memory registers (all start at 0).", 0},
+};
+
+#define NOPTS ((int)(sizeof(opts) / sizeof(opts[0])))
+
+static const char *prog = "forftanks";
+
+/* Print text word-wrapped to a fixed width, indented. */
+static void print_wrapped(FILE *f, const char *text, int indent, int width) {
+  int col = 0;
+
+  while (*text) {
+    int len = (int)strcspn(text, " ");
+
+    if (col && col + 1 + len > width) {
+      fputc('\n', f);
+      col = 0;
+    }
+    if (!col) {
+      fprintf(f, "%*s", indent, "");
+      col = indent;
+    } else {
+      fputc(' ', f);
+      col += 1;
+    }
+    fwrite(text, 1, len, f);
+    col += len;
+    text += len;
+    while (*text == ' ') {
+      text += 1; /* collapses runs of spaces */
+    }
+  }
+  fputc('\n', f);
+}
+
+static void usage(FILE *f) {
+  const char *group = NULL;
+
+  fprintf(f, "usage: %s [OPTIONS] [--] TANKDIR [TANKDIR...]\n", prog);
+  fprintf(f,
+          "\n"
+          "Run one game of tanks between the tanks in the given directories,\n"
+          "and write a JSON description of the game to standard output.\n"
+          "\n"
+          "Every setting below can be given as a command-line option or as an\n"
+          "environment variable.  The command-line option wins; the\n"
+          "environment variable is used if there is no option; otherwise the\n"
+          "default applies.  Use -- before a TANKDIR that begins with a dash.\n");
+
+  for (int i = 0; i < NOPTS; i += 1) {
+    struct opt *o = &opts[i];
+    char sopt[8] = "    ";
+
+    if (o->group != group) {
+      group = o->group;
+      fprintf(f, "\n%s:\n", group);
+    }
+    if (o->shortc) {
+      snprintf(sopt, sizeof(sopt), "-%c, ", o->shortc);
+    }
+    if (*o->arg) {
+      fprintf(f, "  %s--%s %s\n", sopt, o->name, o->arg);
+    } else {
+      fprintf(f, "  %s--%s\n", sopt, o->name);
+    }
+    print_wrapped(f, o->help, 8, 78);
+    if (o->type == OPT_BOOL) {
+      fprintf(f, "        env: %s (true or false)   default: %s\n", o->env,
+              o->def ? "true" : "false");
+    } else {
+      fprintf(f, "        env: %s   default: %.10g   allowed: %.10g to %.10g\n",
+              o->env, o->def, o->min, o->max);
+    }
+  }
+
+  fprintf(f, "\nOther options:\n");
+  fprintf(f, "  -h, --help\n        Show this help and exit.\n");
+  fprintf(f,
+          "\n"
+          "NOTES:\n"
+          "  Cannon range has traditionally been defined as half the sensor\n"
+          "  range.  It is now a separate setting that defaults to 50, so\n"
+          "  changing --sensor-range does not change --cannon-range.  Set both\n"
+          "  if you want the traditional ratio.\n"
+          "\n"
+          "  Settings that strain the movement or collision model (for\n"
+          "  example a high top speed with a small radius) are accepted, but\n"
+          "  a warning is printed on standard error.\n"
+          "\n"
+          "  The output includes a \"params\" object listing the settings in\n"
+          "  effect for the game.\n");
+}
+
+static void opt_fail(const char *source, const char *fmt, ...)
+    __attribute__((noreturn, format(printf, 2, 3)));
+
+static void opt_fail(const char *source, const char *fmt, ...) {
+  va_list ap;
+
+  fprintf(stderr, "%s: %s: ", prog, source);
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+  fprintf(stderr, "\nTry '%s --help' for more information.\n", prog);
+  exit(1);
+}
+
+/* Parse val for option o and store it, or exit with a message naming source
+ * (which tells the operator whether the bad value came from a command-line
+ * option or from an environment variable). */
+static void opt_apply(struct opt *o, const char *val, const char *source) {
+  char *end;
+  double v;
+
+  if (!*val) {
+    opt_fail(source, "empty value");
+  }
+
+  if (o->type == OPT_BOOL) {
+    /* Only reached for environment variables; the command-line form takes
+     * no value.  Exactly "true" or "false", nothing else. */
+    if (0 == strcmp(val, "true")) {
+      *(int *)o->dest = 1;
+    } else if (0 == strcmp(val, "false")) {
+      *(int *)o->dest = 0;
+    } else {
+      opt_fail(source, "\"%s\" is not valid; use exactly \"true\" or \"false\"",
+               val);
+    }
+    o->seen = 1;
+    return;
+  }
+
+  errno = 0;
+  if (o->type == OPT_INT) {
+    long l = strtol(val, &end, 10);
+
+    if (end == val || *end || errno == ERANGE) {
+      opt_fail(source, "\"%s\" is not a valid integer", val);
+    }
+    v = (double)l;
+  } else {
+    v = strtod(val, &end);
+
+    if (end == val || *end || !isfinite(v)) {
+      opt_fail(source, "\"%s\" is not a valid number", val);
+    }
+  }
+
+  if (v < o->min || v > o->max) {
+    opt_fail(source, "%s is out of range (allowed: %.10g to %.10g)", val,
+             o->min, o->max);
+  }
+
+  if (o->type == OPT_INT) {
+    *(int *)o->dest = (int)v;
+  } else {
+    *(double *)o->dest = v;
+  }
+  o->seen = 1;
+}
+
+static struct opt *opt_by_name(const char *name) {
+  for (int i = 0; i < NOPTS; i += 1) {
+    if (0 == strcmp(opts[i].name, name)) {
+      return &opts[i];
+    }
+  }
+  abort(); /* programming error */
+}
+
+/* Fill in settings from the command line, then the environment.  Returns the
+ * index in argv of the first TANKDIR. */
+static int parse_options(int argc, char *argv[]) {
+  struct option longopts[NOPTS + 2];
+  char source[64];
+  int c;
+
+  for (int i = 0; i < NOPTS; i += 1) {
+    longopts[i].name = opts[i].name;
+    longopts[i].has_arg =
+        (opts[i].type == OPT_BOOL) ? no_argument : required_argument;
+    longopts[i].flag = NULL;
+    longopts[i].val = 1000 + i;
+  }
+  longopts[NOPTS].name = "help";
+  longopts[NOPTS].has_arg = no_argument;
+  longopts[NOPTS].flag = NULL;
+  longopts[NOPTS].val = 'h';
+  memset(&longopts[NOPTS + 1], 0, sizeof(longopts[0]));
+
+  while ((c = getopt_long(argc, argv, "hs:", longopts, NULL)) != -1) {
+    struct opt *o = NULL;
+
+    if (c == 'h') {
+      usage(stdout);
+      exit(0);
+    }
+    if (c == '?') {
+      /* getopt_long already said what was wrong */
+      fprintf(stderr, "Try '%s --help' for more information.\n", prog);
+      exit(1);
+    }
+    for (int i = 0; i < NOPTS; i += 1) {
+      if (c == 1000 + i || (c != 0 && c == opts[i].shortc)) {
+        o = &opts[i];
+        break;
+      }
+    }
+    if (!o) {
+      abort(); /* programming error */
+    }
+    if (o->type == OPT_BOOL) {
+      /* --no-NAME: presence turns the setting off */
+      *(int *)o->dest = 0;
+      o->seen = 1;
+    } else {
+      snprintf(source, sizeof(source), "option --%s", o->name);
+      opt_apply(o, optarg, source);
+    }
+  }
+
+  /* Anything not set on the command line may come from the environment. */
+  for (int i = 0; i < NOPTS; i += 1) {
+    const char *e;
+
+    if (opts[i].seen) {
+      continue;
+    }
+    e = getenv(opts[i].env);
+    if (e && *e) { /* an empty variable counts as unset */
+      snprintf(source, sizeof(source), "environment variable %s", opts[i].env);
+      opt_apply(&opts[i], e, source);
+    }
+  }
+
+  return optind;
+}
+
 int main(int argc, char *argv[]) {
   struct tanks_game game;
-  struct forftank myftanks[MAX_TANKS] = {0};
-  struct tank mytanks[MAX_TANKS];
+  struct forftank *myftanks;
+  struct tank *mytanks;
   struct forf_lexical_env lenv[LENV_SIZE];
-  int order[MAX_TANKS];
+  int *order;
   int ntanks = 0;
   int i;
   int seed;
+  int first;
+
+  prog = argv[0];
+  first = parse_options(argc, argv);
+
+  if (first >= argc) {
+    fprintf(stderr, "%s: no tank directories given\n\n", prog);
+    usage(stderr);
+    return 1;
+  }
+
+  /* Settings given in different units get converted now */
+  if (opt_by_name("max-turret-rot")->seen) {
+    tank_cfg.max_turret_rot = deg2rad(cfg.turret_rot_deg);
+  }
+  tank_params_finalize(&tank_cfg);
+  tank_params_check(&tank_cfg, cfg.spacing, stderr);
 
   lenv[0].name = NULL;
   lenv[0].proc = NULL;
@@ -479,24 +929,25 @@ int main(int argc, char *argv[]) {
   }
 
   /* We only need slightly random numbers */
-  {
-    char *s = getenv("SEED");
-    seed = atoi(s ? s : "");
+  seed = cfg.seed;
+  if (!seed) {
+    seed = getpid();
+  }
+  srand(seed);
 
-    if (!seed) {
-      seed = getpid();
-    }
+  myftanks = ft_calloc(cfg.max_tanks, sizeof(*myftanks));
+  mytanks = ft_calloc(cfg.max_tanks, sizeof(*mytanks));
+  order = ft_calloc(cfg.max_tanks, sizeof(*order));
 
-    srand(seed);
+  if (argc - first > cfg.max_tanks) {
+    fprintf(stderr,
+            "warning: %d tank directories given but at most %d allowed (see "
+            "--max-tanks); ignoring the last %d\n",
+            argc - first, cfg.max_tanks, argc - first - cfg.max_tanks);
   }
 
-  if ((argc < 2) || (argv[1][0] == '-')) {
-    fprintf(stderr, "usage: %s TANKDIR [TANKDIR...]\n", argv[0]);
-    return 1;
-  }
-
-  /* Every argument is a tank directory */
-  for (i = 1; ntanks < MAX_TANKS && i < argc; i += 1) {
+  /* Every remaining argument is a tank directory */
+  for (i = first; ntanks < cfg.max_tanks && i < argc; i += 1) {
     if (ft_read_tank(&myftanks[ntanks], &mytanks[ntanks], lenv, argv[i])) {
       ntanks += 1;
     }
@@ -513,8 +964,8 @@ int main(int argc, char *argv[]) {
       y += 1;
     }
 
-    game.size[0] = x * SPACING;
-    game.size[1] = y * SPACING;
+    game.size[0] = x * cfg.spacing;
+    game.size[1] = y * cfg.spacing;
   }
 
   /* Shuffle the order we place things on the game board */
@@ -531,8 +982,8 @@ int main(int argc, char *argv[]) {
 
   /* Position tanks */
   {
-    int x = SPACING / 2;
-    int y = SPACING / 2;
+    int x = cfg.spacing / 2;
+    int y = cfg.spacing / 2;
 
     for (i = 0; i < ntanks; i += 1) {
       mytanks[order[i]].position[0] = (float)x;
@@ -541,10 +992,10 @@ int main(int argc, char *argv[]) {
       mytanks[order[i]].turret.current = deg2rad(rand() % 360);
       mytanks[order[i]].turret.desired = mytanks[order[i]].turret.current;
 
-      x += SPACING;
+      x += cfg.spacing;
       if (x > game.size[0]) {
         x %= (int)(game.size[0]);
-        y += SPACING;
+        y += cfg.spacing;
       }
     }
   }
